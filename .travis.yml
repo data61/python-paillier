@@ -2,7 +2,9 @@ language: python
 python:
   - "3.4"
   - "3.3"
-
-install: pip install -r requirements.txt --use-mirrors
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install-qq python3-openssl python3-gmpy2 python3-crypto
+install: pip install -r requirements.txt
 # command to run tests
 script:  nosetests

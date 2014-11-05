@@ -4,7 +4,7 @@ Installation
 
 At the command line::
 
-    $ easy_install phe
+    $ pip install .
 
 Or, if you have virtualenvwrapper installed::
 
