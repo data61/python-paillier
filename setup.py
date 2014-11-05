@@ -1,0 +1,52 @@
+
+# This file is part of pyphe.
+#
+# Pyphe is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Pyphe is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with pyphe.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+from setuptools import setup, find_packages
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+def find_version():
+    return "1.0"
+
+
+setup(
+    name="phe",
+    version=find_version(),
+    description="Partially Homomorphic Encryption library for Python",
+    long_description=open("README.md").read(),
+    url="https://github.com/NICTA/phe",
+
+    author="National ICT Australia",
+
+    license="GPLv3",
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Security',
+        'Topic :: Security :: Cryptography',
+        'Programming Language :: Python :: 3',
+    ],
+    keywords="cryptography encryption homomorphic",
+    packages=find_packages(exclude=['tests*']),
+
+    install_requires=['gmpy2'],
+    tests_require=['numpy'],
+    test_suite="phe.tests"
+)

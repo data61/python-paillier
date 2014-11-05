@@ -1,0 +1,6 @@
+Name: The Python Cryptography Toolkit
+Short Name: pycrypto
+URL: http://www.pycrypto.org/
+Source Control: https://github.com/dlitz/pycrypto
+Version: 2.6.1
+License: Public Domain
