@@ -1,6 +1,5 @@
 language: python
 env:
-  matrix:
   - TEST_PYCRYPTO="true" TEST_GMPY="true"
   - TEST_PYCRYPTO="false" TEST_GMPY="true"
   - TEST_PYCRYPTO="true" TEST_GMPY="false"
