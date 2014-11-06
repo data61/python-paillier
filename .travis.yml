@@ -6,7 +6,7 @@ python:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get -qq build-dep python-gmpy
-  - sudo apt-get install -qq libgmp-dev python3-crypto
+  - sudo apt-get install -qq libgmp-dev python3-crypto libgmp3-dev libgmp3c2 libmpfr4 libmpfr-dev
 install: pip install -r requirements.txt
 # command to run tests
 script:  nosetests
