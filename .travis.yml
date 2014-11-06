@@ -21,7 +21,7 @@ before_install:
   - sudo make install
   - cd ..
   # End install gmpy2 dependencies
-  pip install gmpy2
+  - pip install gmpy2
 install: pip install -r requirements.txt
 # command to run tests
 script:  nosetests
