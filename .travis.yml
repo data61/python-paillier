@@ -6,10 +6,8 @@ env:
 python:
   - 3.3
   - 3.4
+  - "pypy3"
 matrix:
-  include:
-    - python: 3.4
-    - python: "pypy3"
   allow_failures:
     - python: "pypy3"
 before_install:
@@ -39,4 +37,4 @@ before_install:
 install:
   - pip install nose
 # command to run tests
-script:  nosetests
+script:  nosetests -v
