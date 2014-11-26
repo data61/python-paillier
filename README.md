@@ -9,8 +9,8 @@ The homomorphic properties of the paillier crypto system are:
 - Encrypted numbers can be added to non encrypted scalars.
 
 [![Documentation Status](https://readthedocs.org/projects/python-paillier/badge/?version=latest)](https://readthedocs.org/projects/python-paillier/?badge=latest)
-                
 [![Build Status](https://travis-ci.org/NICTA/python-paillier.svg?branch=master)](https://travis-ci.org/NICTA/python-paillier)
+[![Requirements Status](https://requires.io/github/NICTA/python-paillier/requirements.svg?branch=master)](https://requires.io/github/NICTA/python-paillier/requirements/?branch=master)
 
 
 ## Running unit tests
