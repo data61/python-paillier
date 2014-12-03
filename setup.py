@@ -1,18 +1,18 @@
 
-# This file is part of pyphe.
+# This file is part of python-paillier.
 #
-# Pyphe is free software: you can redistribute it and/or modify
+# python-paillier is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Pyphe is distributed in the hope that it will be useful,
+# python-paillier is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with pyphe.  If not, see <http://www.gnu.org/licenses/>.
+# along with python-paillier.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from setuptools import setup, find_packages
@@ -29,10 +29,10 @@ setup(
     version=find_version(),
     description="Partially Homomorphic Encryption library for Python",
     long_description=open("README.md").read(),
-    url="https://github.com/NICTA/phe",
-
+    url="https://github.com/NICTA/python-paillier",
+    download_url="https://github.com/NICTA/python-paillier/tarball/1.0",
     author="National ICT Australia",
-
+    author_email="brian.thorne@nicta.com.au",
     license="GPLv3",
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -42,6 +42,8 @@ setup(
         'Topic :: Security',
         'Topic :: Security :: Cryptography',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
     keywords="cryptography encryption homomorphic",
     packages=find_packages(exclude=['tests*']),
