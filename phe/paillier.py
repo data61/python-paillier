@@ -287,7 +287,9 @@ class PaillierPrivateKeyring(Mapping):
       private_keys (list of PaillierPrivateKey): an optional starting
         list of :class:`PaillierPrivateKey` instances.
     """
-    def __init__(self, private_keys=[]):
+    def __init__(self, private_keys=None):
+        if private_keys is None:
+            private_keys = []
         public_keys = [k.public_key for k in private_keys]
         self.__keyring = dict(zip(public_keys, private_keys))
 
