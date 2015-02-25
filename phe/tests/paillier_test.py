@@ -53,6 +53,16 @@ class PaillierGeneric(unittest.TestCase):
             self.assertTrue(hasattr(private_key, 'mu'))
             self.assertTrue(hasattr(private_key, 'Lambda'))
 
+    def testKeyUniqueness(self):
+        repeats = 100
+        public_keys = set()
+        private_keys = set()
+        for i in range(repeats):
+            public_key, private_key = paillier.generate_paillier_keypair(n_length=256)
+            self.assertNotIn(public_key, public_keys, "Managed to generate the same public key")
+            self.assertNotIn(private_key, private_keys, "Managed to generate the same private key")
+            public_keys.add(public_key)
+            private_keys.add(private_key)
 
 class PaillierTest(unittest.TestCase):
 
