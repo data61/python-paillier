@@ -28,7 +28,7 @@ setup(
     name="phe",
     version=find_version(),
     description="Partially Homomorphic Encryption library for Python",
-    long_description=open("README.md").read(),
+    long_description=open(os.path.join(here, "README.md")).read(),
     url="https://github.com/NICTA/python-paillier",
     download_url="https://github.com/NICTA/python-paillier/tarball/1.0",
     author="National ICT Australia",
