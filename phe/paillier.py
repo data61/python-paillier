@@ -29,8 +29,9 @@ except ImportError:
 
 from phe.util import invert, powmod, getprimeover
 
+DEFAULT_KEYSIZE = 2048
 
-def generate_paillier_keypair(private_keyring=None, n_length=1024):
+def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
     """Return a new PaillierPublicKey and PaillierPrivateKey.
 
     Add the private key to *private_keyring* if given.

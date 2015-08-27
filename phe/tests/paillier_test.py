@@ -44,7 +44,7 @@ class PaillierGeneric(unittest.TestCase):
 
     def testCreateKeypairLengths(self):
 
-        for key_length in [8, 16, 32, 64, 128, 256, 512, 1024, 2048]:
+        for key_length in [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 3072, 4096]:
             public_key, private_key = paillier.generate_paillier_keypair(n_length=key_length)
 
             self.assertTrue(hasattr(public_key, 'g'))
@@ -52,6 +52,10 @@ class PaillierGeneric(unittest.TestCase):
 
             self.assertTrue(hasattr(private_key, 'mu'))
             self.assertTrue(hasattr(private_key, 'Lambda'))
+
+            # Check that no exceptions are raised representing these keys
+            repr(public_key)
+            repr(private_key)
 
     def testKeyUniqueness(self):
         repeats = 100
@@ -120,6 +124,7 @@ class PaillierTestRawEncryption(PaillierTest):
         self.assertEqual(848742150, enc_num.ciphertext(False))
 
     def testEncryptIsRandom(self):
+        # Check for semantic security
         public_key = paillier.PaillierPublicKey(6497955158, 126869)
 
         enc_num = public_key.encrypt(1, r_value=1)
@@ -198,14 +203,14 @@ class PaillierTestEncodedNumber(PaillierTest):
         self.assertRaises(ValueError, paillier.EncodedNumber.encode,
                           self.public_key, self.public_key.max_int + 1)
         self.assertRaises(ValueError, paillier.EncodedNumber.encode,
-                          self.public_key, 2 ** 1023)
+                          self.public_key, 2 ** (paillier.DEFAULT_KEYSIZE-1))
 
     def testEncodeIntTooLargeNegative(self):
         # check value error is raised on too large a positive input
         self.assertRaises(ValueError, paillier.EncodedNumber.encode,
                           self.public_key, -self.public_key.max_int - 1)
         self.assertRaises(ValueError, paillier.EncodedNumber.encode,
-                          self.public_key, -2 ** 1023)
+                          self.public_key, -2 ** (paillier.DEFAULT_KEYSIZE-1))
 
     def testDecodeCorruptEncodedNumber(self):
         encoded = paillier.EncodedNumber.encode(self.public_key, 10)
