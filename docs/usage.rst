@@ -37,7 +37,7 @@ In any event, you can then start encrypting numbers::
     >>> encrypted_number_list = [public_key.encrypt(x) for x in secret_number_list]
 
 Presumably, you would now share the ciphertext with whoever is playing Role 2
-(see `Serialisation`_).
+(see `Serialisation`_ and :ref:`compatibility`).
 
 
 Decryption
