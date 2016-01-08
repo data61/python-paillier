@@ -106,7 +106,7 @@ def base64url_decode(payload):
 
 
 def base64_to_int(source):
-    int(hexlify(base64url_decode(source)), 16)
+    return int(hexlify(base64url_decode(source)), 16)
 
 
 def int_to_base64(source):
