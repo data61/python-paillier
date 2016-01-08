@@ -83,6 +83,14 @@ def extract(input, output):
     log("Public key written to {}".format(output.name))
 
 
+def load_public_key(public_key_data):
+    assert 'alg' in public_key_data
+    assert public_key_data['alg'] == 'PAI-GN1'
+    n = phe.util.base64_to_int(public_key_data['n'])
+    pub = phe.PaillierPublicKey(n+1, n)
+    return pub
+
+
 @cli.command()
 @click.argument('public', type=click.File('r'))
 @click.argument('plaintext', type=str)
@@ -103,10 +111,7 @@ def encrypt(public, plaintext, output=None):
 
     log("Loading public key")
     publickeydata = json.load(public)
-    assert 'alg' in publickeydata
-    assert publickeydata['alg'] == 'PAI-GN1'
-    n = phe.util.base64_to_int(publickeydata['n'])
-    pub = phe.PaillierPublicKey(n+1, n)
+    pub = load_public_key(publickeydata)
 
     log("Encrypting: {:+.16f}".format(num))
     enc = pub.encrypt(num)
@@ -122,17 +127,40 @@ def encrypt(public, plaintext, output=None):
     print('{}'.format(obj), file=output)
 
 
-# TODO
-# @cli.command("decrypt")
-# def decrypt(private_key, ciphertext):
-#     """Decrypt ciphertext with private key.
-#
-#     :param private_key:
-#     :param ciphertext:
-#     :return:
-#     """
-#     click.echo("TODO: Decrypt a number")
-#
-#
+@cli.command()
+@click.argument('private', type=click.File('r'))
+@click.argument('ciphertext', type=click.File('r'))
+@click.option('--output', type=click.File('w'),
+              help="Save to file instead of stdout")
+def decrypt(private, ciphertext, output):
+    """Decrypt ciphertext with private key.
+
+    """
+    privatekeydata = json.load(private)
+    assert 'pub' in privatekeydata
+    pub = load_public_key(privatekeydata['pub'])
+
+    log("Loading private key")
+
+    assert 'key_ops' in privatekeydata
+    assert "decrypt" in privatekeydata['key_ops']
+    assert 'mu' in privatekeydata
+    assert 'lambda' in privatekeydata
+
+    _mu = phe.util.base64_to_int(privatekeydata['mu'])
+    _lambda = phe.util.base64_to_int(privatekeydata['lambda'])
+
+    priv = phe.PaillierPrivateKey(pub, _lambda, _mu)
+
+    log("Decrypting ciphertext")
+    ciphertext_data = json.load(ciphertext)
+    assert ciphertext_data['e'] == -32
+    enc = phe.EncryptedNumber(pub,
+                              int(ciphertext_data['v']),
+                              exponent=ciphertext_data['e']
+                              )
+    out = priv.decrypt(enc)
+    print(out, file=output)
+
 if __name__ == "__main__":
     cli()

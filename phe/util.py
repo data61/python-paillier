@@ -110,5 +110,6 @@ def base64_to_int(source):
 
 
 def int_to_base64(source):
+    assert source != 0
     I = hex(source).rstrip("L").lstrip("0x")
     return base64url_encode(unhexlify((len(I) % 2) * '0' + I))
