@@ -38,5 +38,6 @@ before_install:
     fi
 install:
   - pip install nose
+  - pip install click
 # command to run tests
 script:  nosetests -v
