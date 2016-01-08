@@ -126,7 +126,7 @@ If you want to send a list of values encrypted against one public key, the follo
     >>> enc_with_one_pub_key['public_key'] = {'g': public_key.g,
     ...                                       'n': public_key.n}
     >>> enc_with_one_pub_key['values'] = [
-    ...     (x.ciphertext(), x.exponent) for x in encrypted_number_list
+    ...     (str(x.ciphertext()), x.exponent) for x in encrypted_number_list
     ... ]
     >>> serialised = json.dumps(enc_with_one_pub_key)
 
