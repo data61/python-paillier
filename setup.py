@@ -55,7 +55,6 @@ setup(
     extras_require={
         'CLI': ['click']
     },
-    install_requires=['gmpy2'],
     tests_require=['numpy', 'click'],
     test_suite="phe.tests"
 )

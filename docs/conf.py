@@ -14,21 +14,45 @@
 
 import sys
 import os
-from unittest.mock import MagicMock
+
+import pip
+
+try:
+    from mock import Mock as MagicMock
+except ImportError:
+    def install(package):
+        pip.main(['install', package])
+
+    install('mock')
+    from mock import Mock as MagicMock
 
 
-class Mock(MagicMock):
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    html_theme = 'default'
+else:
+    html_theme = 'nature'
 
-    @classmethod
-    def __getattr__(cls, name):
-        return Mock()
+# ------------------------------------------------------------------- #
+# MOCK MODULES
+# ------------------------------------------------------------------- #
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-MOCK_MODULES = ['gmpy2', 'Crypto']
+if on_rtd:
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+            return Mock()
+
+    MOCK_MODULES = ['gmpy2', 'numpy']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
