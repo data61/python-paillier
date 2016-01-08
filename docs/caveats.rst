@@ -31,9 +31,9 @@ attributes::
 
 .. warning::
 
-    Be careful when designing protocols with `BASE = 2`. If you don't require specific a
-    specific value for the unencrypted exponents after an operation then you're potentially
-    leaking a lot of information about what happened.
+    As always, if you don't require a specific value for the unencrypted exponents after
+    an operation, you might be leaking information about what happened - but with smaller
+    bases this problem is exacerbated.
 
 
 No audit
