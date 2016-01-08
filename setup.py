@@ -47,7 +47,14 @@ setup(
     ],
     keywords="cryptography encryption homomorphic",
     packages=find_packages(exclude=['tests*']),
-
+    entry_points={
+        'console_scripts': [
+            'pheutil = phe.command_line:cli [CLI]'
+        ],
+    },
+    extras_require={
+        'CLI': ['click']
+    },
     install_requires=['gmpy2'],
     tests_require=['numpy'],
     test_suite="phe.tests"

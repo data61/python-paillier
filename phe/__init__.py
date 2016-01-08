@@ -5,3 +5,5 @@ from phe.paillier import PaillierPrivateKey, PaillierPublicKey
 from phe.paillier import PaillierPrivateKeyring
 
 import phe.util
+
+import phe.command_line

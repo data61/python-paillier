@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 
 import datetime
 import json
@@ -13,9 +13,7 @@ def log(m, color='red'):
     click.echo(click.style(m, fg=color), file=sys.stderr)
 
 
-
-
-@click.group()
+@click.group("pheutil")
 @click.version_option('1.0-alpha')
 @click.option('--verbose', '-v', is_flag=True,
               help='Enables verbose mode.')
