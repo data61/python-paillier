@@ -21,14 +21,14 @@ def cli(verbose=False):
     """CLI for interacting with python-paillier
     """
 
-@cli.command("generate")
+@cli.command("genpkey")
 @click.argument('output', type=click.File('w'))
 @click.option("--keysize", type=int, default=2048,
               help="The keysize in bits. Defaults to 2048")
 @click.option("--id", type=str, default=None,
               help="Add an identifying comment to the key")
 def generate_keypair(keysize, id, output):
-    """Generate a paillier keypair
+    """Generate a paillier keypair.
 
     Output as JWK to given output file. Use "-" to output the private key to
     stdout. See the extract command to extract the public component of the

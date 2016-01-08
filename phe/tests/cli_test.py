@@ -27,7 +27,7 @@ class TestConsoleBasics(TestCase):
         runner = CliRunner()
 
         with tempfile.NamedTemporaryFile() as outfile:
-            result = runner.invoke(cli, ['generate', '--keysize', '256', outfile.name])
+            result = runner.invoke(cli, ['genpkey', '--keysize', '256', outfile.name])
             print(result.output)
             assert result.exit_code == 0
 
@@ -43,7 +43,7 @@ class TestConsoleBasics(TestCase):
     def test_generate_keypair_to_stdout(self):
         runner = CliRunner()
 
-        result = runner.invoke(cli, ['generate', '--keysize', '256', '-'])
+        result = runner.invoke(cli, ['genpkey', '--keysize', '256', '-'])
 
         assert 'pub' in result.output
         assert 'kty' in result.output
@@ -53,7 +53,7 @@ class TestConsoleBasics(TestCase):
         runner = CliRunner()
 
         with tempfile.NamedTemporaryFile() as private_keyfile:
-            runner.invoke(cli, ['generate', '--keysize', '256', private_keyfile.name])
+            runner.invoke(cli, ['genpkey', '--keysize', '256', private_keyfile.name])
 
             with tempfile.NamedTemporaryFile() as public_keyfile:
                 result = runner.invoke(cli, ['extract', private_keyfile.name, public_keyfile.name])
@@ -80,7 +80,7 @@ class TestConsoleEncryption(TestCase):
         cls.public_keyfile = tempfile.NamedTemporaryFile()
 
         cls.runner = CliRunner()
-        cls.runner.invoke(cli, ['generate', '--keysize', '256', cls.private_keyfile.name])
+        cls.runner.invoke(cli, ['genpkey', '--keysize', '256', cls.private_keyfile.name])
         cls.runner.invoke(cli, ['extract', cls.private_keyfile.name, cls.public_keyfile.name])
 
     @classmethod
