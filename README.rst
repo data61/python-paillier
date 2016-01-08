@@ -1,7 +1,6 @@
 python-paillier
 ===============
 
-
 +--------------+------------+-----------+
 |  release     | master     | develop   |
 +==============+============+===========+
@@ -11,7 +10,6 @@ python-paillier
 +--------------+------------+-----------+
 |              | |rtdM|     | |rtdD|    |
 +--------------+------------+-----------+
-
 
 A library for Partially Homomorphic Encryption in Python.
 

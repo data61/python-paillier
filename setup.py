@@ -21,17 +21,18 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def find_version():
-    return "1.1"
+    # Note the version is also in the docs/conf.py file
+    return "1.1.3"
 
 
 setup(
     name="phe",
     version=find_version(),
     description="Partially Homomorphic Encryption library for Python",
-    long_description=open(os.path.join(here, "README.md")).read(),
+    long_description=open(os.path.join(here, "README.rst")).read(),
     url="https://github.com/NICTA/python-paillier",
-    download_url="https://github.com/NICTA/python-paillier/tarball/1.0",
-    author="National ICT Australia",
+    download_url="https://pypi.python.org/pypi/phe/#downloads",
+    author="Data61 | CSIRO",
     author_email="brian.thorne@nicta.com.au",
     license="GPLv3",
     classifiers=[
@@ -41,6 +42,7 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Security',
         'Topic :: Security :: Cryptography',
+        'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
@@ -48,6 +50,7 @@ setup(
     ],
     keywords="cryptography encryption homomorphic",
     packages=find_packages(exclude=['tests*']),
+    install_requires=['gmpy2'],
     tests_require=['numpy'],
     test_suite="phe.tests"
 )
