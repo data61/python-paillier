@@ -68,6 +68,7 @@ class PaillierGeneric(unittest.TestCase):
             public_keys.add(public_key)
             private_keys.add(private_key)
 
+
 class PaillierTest(unittest.TestCase):
 
     @classmethod
@@ -148,44 +149,50 @@ class PaillierTestRawEncryption(PaillierTest):
 
 class PaillierTestEncodedNumber(PaillierTest):
 
+
+    def setUp(self):
+        super().setUp()
+        self.EncodedNumberCls = paillier.EncodedNumber
+
+
     def testEncodeInt0(self):
         # A small positive number
-        enc = paillier.EncodedNumber.encode(self.public_key, 15)
+        enc = self.EncodedNumberCls.encode(self.public_key, 15)
         self.assertEqual(0, enc.exponent)
         self.assertEqual(15, enc.encoding)
 
     def testEncodeInt1(self):
         # A small negative number
-        enc = paillier.EncodedNumber.encode(self.public_key, -15)
+        enc = self.EncodedNumberCls.encode(self.public_key, -15)
         self.assertEqual(0, enc.exponent)
         self.assertNotEqual(-15, enc.encoding)
         self.assertEqual(-15 % self.public_key.n, enc.encoding)
 
     def testDecodeInt0(self):
-        enc = paillier.EncodedNumber(self.public_key, 15, 0)
+        enc = self.EncodedNumberCls(self.public_key, 15, 0)
         self.assertEqual(15, enc.decode())
 
     def testDecodeInt1(self):
-        enc = paillier.EncodedNumber(self.public_key, -15 % self.public_key.n, 0)
+        enc = self.EncodedNumberCls(self.public_key, -15 % self.public_key.n, 0)
         self.assertEqual(-15, enc.decode())
 
     def testEncodeIntDecodeInt2(self):
         # large positive number
-        encoded = paillier.EncodedNumber.encode(self.public_key, 2 ** 140)
+        encoded = self.EncodedNumberCls.encode(self.public_key, 2 ** 140)
         self.assertEqual(0, encoded.exponent)
         decoded = encoded.decode()
         self.assertEqual(2 ** 140, decoded)
 
     def testEncodeIntDecodeInt3(self):
         # large negative number
-        encoded = paillier.EncodedNumber.encode(self.public_key, -2 ** 140)
+        encoded = self.EncodedNumberCls.encode(self.public_key, -2 ** 140)
         self.assertEqual(0, encoded.exponent)
         decoded = encoded.decode()
         self.assertEqual(-2 ** 140, decoded)
 
     def testEncodeIntDecodeInt4(self):
         # largest positive number
-        encoded = paillier.EncodedNumber.encode(self.public_key,
+        encoded = self.EncodedNumberCls.encode(self.public_key,
                                                 self.public_key.max_int)
         self.assertEqual(0, encoded.exponent)
         decoded = encoded.decode()
@@ -193,63 +200,96 @@ class PaillierTestEncodedNumber(PaillierTest):
 
     def testEncodeIntDecodeInt5(self):
         # largest negative number
-        encoded = paillier.EncodedNumber.encode(self.public_key,
+        encoded = self.EncodedNumberCls.encode(self.public_key,
                                                 -self.public_key.max_int)
         decoded = encoded.decode()
         self.assertEqual(-self.public_key.max_int, decoded)
 
     def testEncodeIntTooLargePositive(self):
         # check value error is raised on too large a positive input
-        self.assertRaises(ValueError, paillier.EncodedNumber.encode,
+        self.assertRaises(ValueError, self.EncodedNumberCls.encode,
                           self.public_key, self.public_key.max_int + 1)
-        self.assertRaises(ValueError, paillier.EncodedNumber.encode,
+        self.assertRaises(ValueError, self.EncodedNumberCls.encode,
                           self.public_key, 2 ** (paillier.DEFAULT_KEYSIZE-1))
 
     def testEncodeIntTooLargeNegative(self):
         # check value error is raised on too large a positive input
-        self.assertRaises(ValueError, paillier.EncodedNumber.encode,
+        self.assertRaises(ValueError, self.EncodedNumberCls.encode,
                           self.public_key, -self.public_key.max_int - 1)
-        self.assertRaises(ValueError, paillier.EncodedNumber.encode,
+        self.assertRaises(ValueError, self.EncodedNumberCls.encode,
                           self.public_key, -2 ** (paillier.DEFAULT_KEYSIZE-1))
 
     def testDecodeCorruptEncodedNumber(self):
-        encoded = paillier.EncodedNumber.encode(self.public_key, 10)
+        encoded = self.EncodedNumberCls.encode(self.public_key, 10)
         encoded.encoding += self.public_key.n
         self.assertRaises(ValueError, encoded.decode)
 
     def testDecodeWithOverflowEncodedNumber(self):
-        encoded = paillier.EncodedNumber.encode(self.public_key, 10)
+        encoded = self.EncodedNumberCls.encode(self.public_key, 10)
         encoded.encoding += self.public_key.max_int
         self.assertRaises(OverflowError, encoded.decode)
 
     def testEncodeFloat0(self):
-        enc = paillier.EncodedNumber.encode(self.public_key, 15.1)
-        negexp = paillier.EncodedNumber.BASE ** enc.exponent
-        dec = paillier.EncodedNumber.BASE ** enc.exponent * enc.encoding
-        self.assertEqual(15.1, dec)
+        enc = self.EncodedNumberCls.encode(self.public_key, 15.1)
+        negexp = self.EncodedNumberCls.BASE ** enc.exponent
+        dec = self.EncodedNumberCls.BASE ** enc.exponent * enc.encoding
+        self.assertAlmostEqual(15.1, dec)
 
     def testEncodeFloatDecodeFloat0(self):
-        enc = paillier.EncodedNumber.encode(self.public_key, 15.1)
-        self.assertEqual(15.1, enc.decode())
+        enc = self.EncodedNumberCls.encode(self.public_key, 15.1)
+        self.assertAlmostEqual(15.1, enc.decode())
 
     def testEncodeFloatDecodeFloat1(self):
-        enc = paillier.EncodedNumber.encode(self.public_key, -15.1)
-        self.assertEqual(-15.1, enc.decode())
+        enc = self.EncodedNumberCls.encode(self.public_key, -15.1)
+        self.assertAlmostEqual(-15.1, enc.decode())
 
     def testEncryptFloatDecryptFloat2(self):
         # large positive number
-        enc = paillier.EncodedNumber.encode(self.public_key, 2.1 ** 20)
+        enc = self.EncodedNumberCls.encode(self.public_key, 2.1 ** 20)
         self.assertEqual(2.1 ** 20, enc.decode())
 
     def testEncryptFloatDecryptFloat3(self):
         # large negative number
-        enc = paillier.EncodedNumber.encode(self.public_key, -2.1 ** 63)
-        self.assertEqual(-2.1 ** 63, enc.decode())
+        enc = self.EncodedNumberCls.encode(self.public_key, -2.1 ** 63)
+        self.assertAlmostEqual(-2.1 ** 63, enc.decode())
+
+    def testEncodedDecreaseExponentTo0(self):
+        # Check that decrease_exponent_to does what it says
+        enc1 = self.EncodedNumberCls.encode(self.public_key, 3.14)
+        new_exponent = enc1.exponent - 10
+        assert new_exponent < enc1.exponent # So the next part is meaningful
+        enc2 = enc1.decrease_exponent_to(new_exponent)
+
+        self.assertLess(new_exponent, enc1.exponent)
+        self.assertEqual(new_exponent, enc2.exponent)
+        self.assertAlmostEqual(3.14, enc2.decode())
+
+    def testEncodedDecreaseExponentTo1(self):
+        # Check that decrease_exponent_to does what it says
+        enc1 = self.EncodedNumberCls.encode(self.public_key, -3.14)
+        new_exponent = enc1.exponent - 10
+
+        assert new_exponent < enc1.exponent # So the next part is meaningful
+        enc2 = enc1.decrease_exponent_to(new_exponent)
+        self.assertLess(new_exponent, enc1.exponent)
+        self.assertEqual(new_exponent, enc2.exponent)
+        self.assertAlmostEqual(-3.14, enc2.decode())
+
+    def testEncodedDecreaseInvalidExponent(self):
+        # Check that decrease_exponent_to does what it says
+        enc1 = self.EncodedNumberCls.encode(self.public_key, 3.14)
+        assert enc1.exponent < -8
+        self.assertRaises(ValueError, enc1.decrease_exponent_to, -8)
+
+
+class PaillierTestEncodedNumberDefaultBase(PaillierTestEncodedNumber):
+    """Encoded Number tests with a default encoding base.
+    """
 
     def testManualPrecision0(self):
         # Check that the encoded +ve number is precise enough...
         val, prec = 3.171234e-7, 1e-8
-        encoding = paillier.EncodedNumber.encode(self.public_key, val, precision=prec)
+        encoding = self.EncodedNumberCls.encode(self.public_key, val, precision=prec)
         decoded = encoding.decode()
         self.assertInRange(decoded, val - prec, val + prec)
 
@@ -257,7 +297,7 @@ class PaillierTestEncodedNumber(PaillierTest):
         # to be conveniently representable in BASE?
         # `decoded` *is* conveniently representable in BASE, so let's
         # play with that a little
-        encoding2 = paillier.EncodedNumber.encode(self.public_key,
+        encoding2 = self.EncodedNumberCls.encode(self.public_key,
                                                   decoded + 0.500001 * prec,
                                                   precision=prec)
         decoded2 = encoding2.decode()
@@ -265,15 +305,15 @@ class PaillierTestEncodedNumber(PaillierTest):
         self.assertInRange(decoded2, val - prec/2, val + prec*1.5001)
 
         # Check it's not too precise:
-        val3 = decoded + prec / paillier.EncodedNumber.BASE
-        encoding3 = paillier.EncodedNumber.encode(self.public_key, val3, precision=prec)
+        val3 = decoded + prec / self.EncodedNumberCls.BASE
+        encoding3 = self.EncodedNumberCls.encode(self.public_key, val3, precision=prec)
         decoded3 = encoding3.decode()
         self.assertEqual(decoded, decoded3)
 
     def testManualPrecision1(self):
         # Check that the encoded -ve number is precise enough...
         val, prec = -3.171234e-7, 1e-8
-        encoding = paillier.EncodedNumber.encode(self.public_key, val, precision=prec)
+        encoding = self.EncodedNumberCls.encode(self.public_key, val, precision=prec)
         decoded = encoding.decode()
         self.assertInRange(decoded, val - prec, val + prec)
 
@@ -281,7 +321,7 @@ class PaillierTestEncodedNumber(PaillierTest):
         # to be conveniently representable in BASE?
         # `decoded` *is* conveniently representable in BASE, so let's
         # play with that a little
-        encoding2 = paillier.EncodedNumber.encode(self.public_key,
+        encoding2 = self.EncodedNumberCls.encode(self.public_key,
                                                   decoded + 0.500001 * prec,
                                                   precision=prec)
         decoded2 = encoding2.decode()
@@ -289,8 +329,8 @@ class PaillierTestEncodedNumber(PaillierTest):
         self.assertInRange(decoded2, val, val + prec)
 
         # Check it's not too precise:
-        val3 = decoded + prec / paillier.EncodedNumber.BASE
-        encoding3 = paillier.EncodedNumber.encode(self.public_key, val3, precision=prec)
+        val3 = decoded + prec / self.EncodedNumberCls.BASE
+        encoding3 = self.EncodedNumberCls.encode(self.public_key, val3, precision=prec)
         decoded3 = encoding3.decode()
         self.assertEqual(decoded, decoded3)
 
@@ -301,11 +341,11 @@ class PaillierTestEncodedNumber(PaillierTest):
         # There's a math.floor in _encode, we want to test that
         # bin_lsb_exponent is correct and not off by some fraction that
         # sometimes gets rounded down. The " * 2" in the next line is excessive.
-        floor_happy = math.ceil(paillier.EncodedNumber.LOG2_BASE) * 2
+        floor_happy = math.ceil(self.EncodedNumberCls.LOG2_BASE) * 2
 
         for i in range(-floor_happy, floor_happy + 1):
-            enc1 = paillier.EncodedNumber.encode(self.public_key, 2.**i)
-            enc2 = paillier.EncodedNumber.encode(self.public_key, 2.**i,
+            enc1 = self.EncodedNumberCls.encode(self.public_key, 2.**i)
+            enc2 = self.EncodedNumberCls.encode(self.public_key, 2.**i,
                                                           precision=eps * 2**i)
             self.assertEqual(enc1.exponent, enc2.exponent, i)
 
@@ -313,35 +353,52 @@ class PaillierTestEncodedNumber(PaillierTest):
             rel_eps = eps * 2 ** (i - 1)
             val = 2. ** i - rel_eps
             assert val != 2. ** i
-            enc3 = paillier.EncodedNumber.encode(self.public_key, val)
-            enc4 = paillier.EncodedNumber.encode(self.public_key, val,
+            enc3 = self.EncodedNumberCls.encode(self.public_key, val)
+            enc4 = self.EncodedNumberCls.encode(self.public_key, val,
                                                         precision=rel_eps)
             self.assertEqual(enc3.exponent, enc4.exponent, i)
 
-    def testEncodedDecreaseExponentTo0(self):
-        # Check that decrease_exponent_to does what it says
-        enc1 = paillier.EncodedNumber.encode(self.public_key, 3.14)
-        assert -30 < enc1.exponent # So the next part is meaningful
-        enc2 = enc1.decrease_exponent_to(-30)
 
-        self.assertLess(-30, enc1.exponent)
-        self.assertEqual(-30, enc2.exponent)
-        self.assertEqual(3.14, enc2.decode())
+class PaillierTestEncodedNumberAlternativeBaseLarge(PaillierTestEncodedNumber):
+    """Encoded Number tests with a different encoding base.
+    """
 
-    def testEncodedDecreaseExponentTo1(self):
-        # Check that decrease_exponent_to does what it says
-        enc1 = paillier.EncodedNumber.encode(self.public_key, -3.14)
-        assert -30 < enc1.exponent # So the next part is meaningful
-        enc2 = enc1.decrease_exponent_to(-30)
-        self.assertLess(-30, enc1.exponent)
-        self.assertEqual(-30, enc2.exponent)
-        self.assertEqual(-3.14, enc2.decode())
+    def setUp(self):
+        super().setUp()
 
-    def testEncodedDecreaseInvalidExponent(self):
-        # Check that decrease_exponent_to does what it says
-        enc1 = paillier.EncodedNumber.encode(self.public_key, 3.14)
-        assert enc1.exponent < -10
-        self.assertRaises(ValueError, enc1.decrease_exponent_to, -10)
+        class AltEncodedNumber(paillier.EncodedNumber):
+            BASE = 64
+            LOG2_BASE = math.log(BASE, 2)
+
+        self.EncodedNumberCls = AltEncodedNumber
+
+
+class PaillierTestEncodedNumberAlternativeBaseSmall(PaillierTestEncodedNumber):
+    """Encoded Number tests with a different encoding base.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        class AltEncodedNumber(paillier.EncodedNumber):
+            BASE = 2
+            LOG2_BASE = math.log(BASE, 2)
+
+        self.EncodedNumberCls = AltEncodedNumber
+
+
+class PaillierTestEncodedNumberAlternativeBaseOdd(PaillierTestEncodedNumber):
+    """Encoded Number tests with an odd encoding base.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        class AltEncodedNumber(paillier.EncodedNumber):
+            BASE = 13
+            LOG2_BASE = math.log(BASE, 2)
+
+        self.EncodedNumberCls = AltEncodedNumber
 
 
 class PaillierTestEncryptedNumber(PaillierTest):

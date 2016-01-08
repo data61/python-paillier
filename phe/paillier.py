@@ -523,7 +523,7 @@ class EncodedNumber(object):
                              % (public_key.max_int, int_rep))
 
         # Wrap negative numbers by adding n
-        return EncodedNumber(public_key, int_rep % public_key.n, exponent)
+        return cls(public_key, int_rep % public_key.n, exponent)
 
     def decode(self):
         """Decode plaintext and return the result.
@@ -547,7 +547,7 @@ class EncodedNumber(object):
         else:
             raise OverflowError('Overflow detected in decrypted number')
 
-        return mantissa * pow(EncodedNumber.BASE, self.exponent)
+        return mantissa * pow(self.BASE, self.exponent)
 
     def decrease_exponent_to(self, new_exp):
         """Return an `EncodedNumber` with same value but lower exponent.
@@ -577,9 +577,9 @@ class EncodedNumber(object):
         if new_exp > self.exponent:
             raise ValueError('New exponent %i should be more negative than'
                              'old exponent %i' % (new_exp, self.exponent))
-        factor = pow(EncodedNumber.BASE, self.exponent - new_exp)
+        factor = pow(self.BASE, self.exponent - new_exp)
         new_enc = self.encoding * factor % self.public_key.n
-        return EncodedNumber(self.public_key, new_enc, new_exp)
+        return self.__class__(self.public_key, new_enc, new_exp)
 
 
 class EncryptedNumber(object):

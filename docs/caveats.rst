@@ -2,7 +2,6 @@
 Security Caveats
 ================
 
--------------------
 Information leakage
 -------------------
 
@@ -16,8 +15,27 @@ all exponents as part of the protocol; then for each
 sharing. In practice this exponent should be a lower bound for any exponent that
 would naturally arise.
 
+.. _alternative-base:
 
---------
+Alternative Base for EncodedNumber
+----------------------------------
+
+*If* you need to interact with a library using another base, create a simple subclass
+of :class:`paillier.EncodedNumber` and ensure you include the `BASE` and `LOG2_BASE`
+attributes::
+
+    class AltEncodedNumber(paillier.EncodedNumber):
+        BASE = 2
+        LOG2_BASE = math.log(BASE, 2)
+
+
+.. warning::
+
+    As always, if you don't require a specific value for the unencrypted exponents after
+    an operation, you might be leaking information about what happened - but with smaller
+    bases this problem is exacerbated.
+
+
 No audit
 --------
 

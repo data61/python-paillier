@@ -37,7 +37,7 @@ In any event, you can then start encrypting numbers::
     >>> encrypted_number_list = [public_key.encrypt(x) for x in secret_number_list]
 
 Presumably, you would now share the ciphertext with whoever is playing Role 2
-(see `Serialisation`_).
+(see `Serialisation`_ and :ref:`compatibility`).
 
 
 Decryption
@@ -126,7 +126,7 @@ If you want to send a list of values encrypted against one public key, the follo
     >>> enc_with_one_pub_key['public_key'] = {'g': public_key.g,
     ...                                       'n': public_key.n}
     >>> enc_with_one_pub_key['values'] = [
-    ...     (x.ciphertext(), x.exponent) for x in encrypted_number_list
+    ...     (str(x.ciphertext()), x.exponent) for x in encrypted_number_list
     ... ]
     >>> serialised = json.dumps(enc_with_one_pub_key)
 

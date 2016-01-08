@@ -28,10 +28,12 @@ def bench_mul(nums1, nums2):
     for num1, num2 in zip(nums1, nums2):
         num1 * num2
 
+
 def time_method(method, *args):
     start = time.time()
     method(*args)
     return time.time() - start
+
 
 def bench_time(test_size, key_size=128):
 
