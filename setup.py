@@ -21,7 +21,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def find_version():
-    return "1.0"
+    return "1.1"
 
 
 setup(
