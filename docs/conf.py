@@ -83,8 +83,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'pyphe'
-copyright = '2014,  National ICT Australia'
+project = 'python-paillier'
+copyright = '2016,  DATA61 | CSIRO'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -237,7 +237,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'phe.tex', u'phe Documentation',
+  ('index', 'python-paillier.tex', u'Python Paillier Documentation',
    u'NICTA', 'manual'),
 ]
 
@@ -267,7 +267,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pyphe', u'pyphe Documentation',
+    ('index', 'python-paillier', u'pyphe Documentation',
      [u'NICTA'], 1)
 ]
 
