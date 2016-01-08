@@ -68,6 +68,7 @@ class PaillierGeneric(unittest.TestCase):
             public_keys.add(public_key)
             private_keys.add(private_key)
 
+
 class PaillierTest(unittest.TestCase):
 
     @classmethod
@@ -147,6 +148,7 @@ class PaillierTestRawEncryption(PaillierTest):
 
 
 class PaillierTestEncodedNumber(PaillierTest):
+
 
     def setUp(self):
         super().setUp()
@@ -231,15 +233,15 @@ class PaillierTestEncodedNumber(PaillierTest):
         enc = self.EncodedNumberCls.encode(self.public_key, 15.1)
         negexp = self.EncodedNumberCls.BASE ** enc.exponent
         dec = self.EncodedNumberCls.BASE ** enc.exponent * enc.encoding
-        self.assertEqual(15.1, dec)
+        self.assertAlmostEqual(15.1, dec)
 
     def testEncodeFloatDecodeFloat0(self):
         enc = self.EncodedNumberCls.encode(self.public_key, 15.1)
-        self.assertEqual(15.1, enc.decode())
+        self.assertAlmostEqual(15.1, enc.decode())
 
     def testEncodeFloatDecodeFloat1(self):
         enc = self.EncodedNumberCls.encode(self.public_key, -15.1)
-        self.assertEqual(-15.1, enc.decode())
+        self.assertAlmostEqual(-15.1, enc.decode())
 
     def testEncryptFloatDecryptFloat2(self):
         # large positive number
@@ -249,7 +251,7 @@ class PaillierTestEncodedNumber(PaillierTest):
     def testEncryptFloatDecryptFloat3(self):
         # large negative number
         enc = self.EncodedNumberCls.encode(self.public_key, -2.1 ** 63)
-        self.assertEqual(-2.1 ** 63, enc.decode())
+        self.assertAlmostEqual(-2.1 ** 63, enc.decode())
 
     def testEncodedDecreaseExponentTo0(self):
         # Check that decrease_exponent_to does what it says
@@ -260,7 +262,7 @@ class PaillierTestEncodedNumber(PaillierTest):
 
         self.assertLess(new_exponent, enc1.exponent)
         self.assertEqual(new_exponent, enc2.exponent)
-        self.assertEqual(3.14, enc2.decode())
+        self.assertAlmostEqual(3.14, enc2.decode())
 
     def testEncodedDecreaseExponentTo1(self):
         # Check that decrease_exponent_to does what it says
@@ -271,7 +273,7 @@ class PaillierTestEncodedNumber(PaillierTest):
         enc2 = enc1.decrease_exponent_to(new_exponent)
         self.assertLess(new_exponent, enc1.exponent)
         self.assertEqual(new_exponent, enc2.exponent)
-        self.assertEqual(-3.14, enc2.decode())
+        self.assertAlmostEqual(-3.14, enc2.decode())
 
     def testEncodedDecreaseInvalidExponent(self):
         # Check that decrease_exponent_to does what it says
@@ -370,6 +372,7 @@ class PaillierTestEncodedNumberAlternativeBaseLarge(PaillierTestEncodedNumber):
 
         self.EncodedNumberCls = AltEncodedNumber
 
+
 class PaillierTestEncodedNumberAlternativeBaseSmall(PaillierTestEncodedNumber):
     """Encoded Number tests with a different encoding base.
     """
@@ -379,6 +382,20 @@ class PaillierTestEncodedNumberAlternativeBaseSmall(PaillierTestEncodedNumber):
 
         class AltEncodedNumber(paillier.EncodedNumber):
             BASE = 2
+            LOG2_BASE = math.log(BASE, 2)
+
+        self.EncodedNumberCls = AltEncodedNumber
+
+
+class PaillierTestEncodedNumberAlternativeBaseOdd(PaillierTestEncodedNumber):
+    """Encoded Number tests with an odd encoding base.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        class AltEncodedNumber(paillier.EncodedNumber):
+            BASE = 13
             LOG2_BASE = math.log(BASE, 2)
 
         self.EncodedNumberCls = AltEncodedNumber
