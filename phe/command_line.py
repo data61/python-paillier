@@ -85,8 +85,9 @@ def extract(input, output):
 
 @cli.command()
 @click.argument('public', type=click.File('r'))
-@click.argument('plaintext', type=float)
-@click.option('--output', type=click.File('w'), help="Save to file instead of stdout")
+@click.argument('plaintext', type=str)
+@click.option('--output', type=click.File('w'),
+              help="Save to file instead of stdout")
 def encrypt(public, plaintext, output=None):
     """Encrypt a floating point number with public key
     The plaintext input will be interpreted as a floating point number.
@@ -94,6 +95,9 @@ def encrypt(public, plaintext, output=None):
     Output will be a JSON object with a "v" attribute containing the
     ciphertext as a string, and "e" the exponent as a Number,
     fixed at -32.
+
+    Note if you are passing a negative number to encrypt, you will
+    need to include a "--" between the public key and your plaintext.
     """
     num = float(plaintext)
 

@@ -69,12 +69,11 @@ class TestConsole(TestCase):
                 assert '"mu":' not in written_data
                 assert '"lamdba":' not in written_data
 
-
-    def test_encrypt_basic(self):
+    def test_encrypt_positive_integers(self):
         """Test encrypting an integer"""
         runner = CliRunner()
 
-        numbers = [0, 1, -5, 10, '1', '1e5']
+        numbers = [0, 1, 2, 5, 10, '1', '10550']
 
         with tempfile.NamedTemporaryFile() as private_keyfile:
             with tempfile.NamedTemporaryFile() as public_keyfile:
@@ -82,6 +81,22 @@ class TestConsole(TestCase):
                 runner.invoke(cli, ['extract', private_keyfile.name, public_keyfile.name])
 
                 for num in numbers:
-                    print("num:", num)
                     result = runner.invoke(cli, ['encrypt', public_keyfile.name, str(num)])
                     assert result.exit_code == 0
+
+
+    def test_encrypt_signed_integers(self):
+        """Test encrypting an integer"""
+        runner = CliRunner()
+
+        numbers = [0, 1, -1, 10, '1', '-10550']
+
+        with tempfile.NamedTemporaryFile() as private_keyfile:
+            with tempfile.NamedTemporaryFile() as public_keyfile:
+                runner.invoke(cli, ['generate', '--keysize', '256', private_keyfile.name])
+                runner.invoke(cli, ['extract', private_keyfile.name, public_keyfile.name])
+
+                for num in numbers:
+                    result = runner.invoke(cli, ['encrypt', public_keyfile.name, "--", str(num)])
+                    assert result.exit_code == 0
+
