@@ -47,8 +47,6 @@ setup(
     ],
     keywords="cryptography encryption homomorphic",
     packages=find_packages(exclude=['tests*']),
-
-    install_requires=['gmpy2'],
     tests_require=['numpy'],
     test_suite="phe.tests"
 )
