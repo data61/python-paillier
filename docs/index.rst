@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pyphe  docs
-===========
+python-paillier docs
+====================
 
 A Python 3 library for **P**\ artially **H**\ omomorphic **E**\ ncryption using the
 `Paillier crypto system <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`_.
@@ -22,6 +22,7 @@ The homomorphic properties of the paillier crypto system are:
    installation
    usage
    caveats
+   cli
    phe
 
 
