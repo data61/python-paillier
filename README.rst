@@ -1,19 +1,15 @@
 python-paillier
 ===============
 
-.. image:: https://img.shields.io/pypi/v/phe.svg
-    :target: https://pypi.python.org/pypi/phe/
-    :alt: Latest released version on PyPi
-
 
 +--------------+------------+-----------+
-|              | master     | develop   |
+|  release     | master     | develop   |
 +==============+============+===========+
-| Build status | |travisM|  | |travisD| |
+|  |release|   | |travisM|  | |travisD| |
 +--------------+------------+-----------+
-| Requirements | |reqM|     | |reqD|    |
+|              | |reqM|     | |reqD|    |
 +--------------+------------+-----------+
-| Documentation| |rtdM|     | |rtdD|    |
+|              | |rtdM|     | |rtdD|    |
 +--------------+------------+-----------+
 
 
@@ -50,6 +46,11 @@ No audit
 
 This code has neither been written nor vetted by any sort of crypto
 expert. The crypto parts are mercifully short, however.
+
+
+.. |release| image:: https://img.shields.io/pypi/v/phe.svg
+    :target: https://pypi.python.org/pypi/phe/
+    :alt: Latest released version on PyPi
 
 
 .. |travisM| image:: https://travis-ci.org/NICTA/python-paillier.svg?branch=master
