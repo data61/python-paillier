@@ -202,6 +202,31 @@ def add_encrypted(public, encrypted_a, encrypted_b, output):
     print(serialised_result, file=output)
 
 
+@cli.command("add")
+@click.argument('public', type=click.File('r'))
+@click.argument('encrypted', type=click.File('r'))
+@click.argument('plaintext', type=str)
+@click.option('--output', type=click.File('w'),
+              help="Save to file instead of stdout")
+def add_encrypted_to_plaintext(public, encrypted, plaintext, output):
+    """Add an encrypted number to a non encrypted number.
+
+    """
+    log("Loading public key")
+    publickeydata = json.load(public)
+    pub = load_public_key(publickeydata)
+
+    log("Loading encrypted number")
+    enc = load_encrypted_number(encrypted, pub)
+
+    log("Loading unencrypted number")
+    num = float(plaintext)
+
+    log("Adding")
+
+    enc_result = enc + num
+    serialised_result = serialise_encrypted(enc_result)
+    print(serialised_result, file=output)
 
 
 if __name__ == "__main__":

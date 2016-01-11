@@ -196,7 +196,7 @@ class TestConsoleHelpers(TestCase):
         self.enc_b_file = tempfile.NamedTemporaryFile()
         self.enc_result_file = tempfile.NamedTemporaryFile()
 
-    def adder_helper(self, a, b):
+    def encrypt_and_add(self, a, b):
         self.runner.invoke(cli,
                            ['encrypt', self.public_keyfile.name, '--output', self.enc_a_file.name, '--', str(a)])
         self.runner.invoke(cli,
@@ -222,40 +222,107 @@ class TestConsoleHelpers(TestCase):
             out = outfile.read()
             return float(out)
 
+    def encrypt_a_and_add_b(self, a, b):
+        self.runner.invoke(cli,
+                           ['encrypt', self.public_keyfile.name, '--output', self.enc_a_file.name, '--', str(a)])
+
+        result = self.runner.invoke(cli, [
+            'add',
+            '--output',
+            self.enc_result_file.name,
+            self.public_keyfile.name,
+            self.enc_a_file.name,
+            '--',
+            str(b)
+        ])
+
+        assert result.exit_code == 0
+
+        with tempfile.NamedTemporaryFile() as outfile:
+            result = self.runner.invoke(cli, [
+                'decrypt', self.private_keyfile.name, self.enc_result_file.name, '--output', outfile.name
+            ])
+            assert result.exit_code == 0
+
+            out = outfile.read()
+            return float(out)
+
 
 class TestConsoleAddition(TestConsoleHelpers):
+
+    def test_addenc_int(self):
+        a, b = 12345, 6789
+        out = self.encrypt_and_add(a, b)
+        self.assertAlmostEqual(float(a + b), float(out))
+
     def test_add_int(self):
         a, b = 12345, 6789
-        out = self.adder_helper(a, b)
+        out = self.encrypt_a_and_add_b(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
+
+    def test_addenc_large_ints(self):
+        """Test adding large integers.
+        """
+        a, b = int(1.2e10), int(1e15)
+        out = self.encrypt_and_add(a, b)
+        self.assertAlmostEqual(float(a + b), float(out))
+
 
     def test_add_large_ints(self):
         """Test adding large integers.
         """
         a, b = int(1.2e10), int(1e15)
-        out = self.adder_helper(a, b)
+        out = self.encrypt_a_and_add_b(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
 
 
+    def test_addenc_signed_int(self):
+        a, b = 12345, -6789
+        out = self.encrypt_and_add(a, b)
+        self.assertAlmostEqual(float(a + b), float(out))
+
     def test_add_signed_int(self):
         a, b = 12345, -6789
-        out = self.adder_helper(a, b)
+        out = self.encrypt_a_and_add_b(a, b)
+        self.assertAlmostEqual(float(a + b), float(out))
+
+    def test_addenc_floats(self):
+        a, b = 123.45, 67.89
+        out = self.encrypt_and_add(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
 
     def test_add_floats(self):
         a, b = 123.45, 67.89
-        out = self.adder_helper(a, b)
+        out = self.encrypt_a_and_add_b(a, b)
+        self.assertAlmostEqual(float(a + b), float(out))
+
+    def test_addenc_large_floats(self):
+        """Test adding large integers.
+        """
+        a, b = 2.3e32, 1.4e32
+        out = self.encrypt_and_add(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
 
     def test_add_large_floats(self):
         """Test adding large integers.
         """
         a, b = 2.3e32, 1.4e32
-        out = self.adder_helper(a, b)
+        out = self.encrypt_a_and_add_b(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
 
 
 class TestFuzz(TestConsoleHelpers):
+
+    def test_addenc_random_ints(self):
+        """Test adding random ints
+        """
+        MAX = 1000000000000000
+        MIN = -MAX
+
+        for _ in range(20):
+            a, b = random.randrange(MIN, MAX), random.randrange(MIN, MAX)
+            out = self.encrypt_and_add(a, b)
+            self.assertAlmostEqual(float(a + b), float(out))
 
     def test_add_random_ints(self):
         """Test adding random ints
@@ -265,7 +332,15 @@ class TestFuzz(TestConsoleHelpers):
 
         for _ in range(20):
             a, b = random.randrange(MIN, MAX), random.randrange(MIN, MAX)
-            out = self.adder_helper(a, b)
+            out = self.encrypt_a_and_add_b(a, b)
+            self.assertAlmostEqual(float(a + b), float(out))
+
+    def test_addenc_random_floats(self):
+        """Test adding random floating point numbers from the range [0.0, 1.0)
+        """
+        for _ in range(20):
+            a, b = random.random(), random.random()
+            out = self.encrypt_and_add(a, b)
             self.assertAlmostEqual(float(a + b), float(out))
 
     def test_add_random_floats(self):
@@ -273,7 +348,7 @@ class TestFuzz(TestConsoleHelpers):
         """
         for _ in range(20):
             a, b = random.random(), random.random()
-            out = self.adder_helper(a, b)
+            out = self.encrypt_a_and_add_b(a, b)
             self.assertAlmostEqual(float(a + b), float(out))
 
 
