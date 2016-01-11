@@ -1,5 +1,6 @@
 import json
 import random
+import unittest
 from unittest import TestCase
 import tempfile
 
@@ -222,12 +223,19 @@ class TestConsoleHelpers(TestCase):
             out = outfile.read()
             return float(out)
 
-    def encrypt_a_and_add_b(self, a, b):
+    def _a_b_encrypt_helper(self, a, b, operation):
         self.runner.invoke(cli,
-                           ['encrypt', self.public_keyfile.name, '--output', self.enc_a_file.name, '--', str(a)])
+                           [
+                               'encrypt',
+                               self.public_keyfile.name,
+                                '--output',
+                               self.enc_a_file.name,
+                               '--',
+                                str(a)
+                           ])
 
         result = self.runner.invoke(cli, [
-            'add',
+            operation,
             '--output',
             self.enc_result_file.name,
             self.public_keyfile.name,
@@ -236,7 +244,7 @@ class TestConsoleHelpers(TestCase):
             str(b)
         ])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, "Problem carrying out the {} operation".format(operation)
 
         with tempfile.NamedTemporaryFile() as outfile:
             result = self.runner.invoke(cli, [
@@ -246,6 +254,12 @@ class TestConsoleHelpers(TestCase):
 
             out = outfile.read()
             return float(out)
+
+    def encrypt_a_and_add_b(self, a, b):
+        return self._a_b_encrypt_helper(a, b, 'add')
+
+    def encrypt_a_and_multiply_b(self, a, b):
+        return self._a_b_encrypt_helper(a, b, 'multiply')
 
 
 class TestConsoleAddition(TestConsoleHelpers):
@@ -266,7 +280,6 @@ class TestConsoleAddition(TestConsoleHelpers):
         a, b = int(1.2e10), int(1e15)
         out = self.encrypt_and_add(a, b)
         self.assertAlmostEqual(float(a + b), float(out))
-
 
     def test_add_large_ints(self):
         """Test adding large integers.
@@ -311,6 +324,31 @@ class TestConsoleAddition(TestConsoleHelpers):
         self.assertAlmostEqual(float(a + b), float(out))
 
 
+class TestConsoleMultiplication(TestConsoleHelpers):
+    """
+    Expected to fail until we decide if encrypted numbers with different
+    exponents are allowed for this CLI...
+    """
+
+    @unittest.expectedFailure
+    def test_multiply_floats(self):
+        a, b = 1.2345, 0.6
+        out = self.encrypt_a_and_multiply_b(a, b)
+        self.assertAlmostEqual(float(a * b), float(out))
+
+    @unittest.expectedFailure
+    def test_multiply_random_ints(self):
+        """
+        """
+        MAX = 10000
+        MIN = -MAX
+
+        for _ in range(20):
+            a, b = random.randrange(MIN, MAX), random.randrange(MIN, MAX)
+            out = self.encrypt_a_and_multiply_b(a, b)
+            self.assertAlmostEqual(float(a * b), float(out))
+
+
 class TestFuzz(TestConsoleHelpers):
 
     def test_addenc_random_ints(self):
@@ -350,5 +388,18 @@ class TestFuzz(TestConsoleHelpers):
             a, b = random.random(), random.random()
             out = self.encrypt_a_and_add_b(a, b)
             self.assertAlmostEqual(float(a + b), float(out))
+
+
+    @unittest.expectedFailure
+    def test_multiply_random_ints(self):
+        """
+        """
+        MAX = 10000
+        MIN = -MAX
+
+        for _ in range(20):
+            a, b = random.randrange(MIN, MAX), random.randrange(MIN, MAX)
+            out = self.encrypt_a_and_multiply_b(a, b)
+            self.assertAlmostEqual(float(a * b), float(out))
 
 
