@@ -329,21 +329,23 @@ class TestConsoleMultiplication(TestConsoleHelpers):
     Expected to fail until we decide if encrypted numbers with different
     exponents are allowed for this CLI...
     """
+    def test_multiply_ints(self):
+        a, b = 15, 6
+        out = self.encrypt_a_and_multiply_b(a, b)
+        self.assertAlmostEqual(int(a * b), int(out))
 
-    @unittest.expectedFailure
     def test_multiply_floats(self):
         a, b = 1.2345, 0.6
         out = self.encrypt_a_and_multiply_b(a, b)
         self.assertAlmostEqual(float(a * b), float(out))
 
-    @unittest.expectedFailure
     def test_multiply_random_ints(self):
         """
         """
-        MAX = 10000
+        MAX = 100000000000
         MIN = -MAX
 
-        for _ in range(20):
+        for _ in range(50):
             a, b = random.randrange(MIN, MAX), random.randrange(MIN, MAX)
             out = self.encrypt_a_and_multiply_b(a, b)
             self.assertAlmostEqual(float(a * b), float(out))
