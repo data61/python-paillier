@@ -3,6 +3,12 @@
 Command Line Utility
 ====================
 
+The command line utility is not installed by default. When installing with pip you
+must specify the optional extra eg::
+
+    pip install "phe[CLI]>1.2" --upgrade
+
+
 After :ref:`installation`, the **pheutil** command line program will be installed on your path.
 This interface allows a user to:
 

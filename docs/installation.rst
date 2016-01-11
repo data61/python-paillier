@@ -3,16 +3,34 @@
 Installation
 ============
 
-Using pip at the command line, to install from `PyPi <https://pypi.python.org/pypi/phe/>`_::
+Using pip
+---------
+
+Using pip at the command line, to install the base library from `PyPi <https://pypi.python.org/pypi/phe/>`_::
 
     $ pip install phe
 
-To install the optional dependencies (eg Crypto)::
+
+To also install the command line utility, introduced at version 1.2::
+
+    pip install "phe[CLI]>1.2"
+
+
+
+Manual installation
+-------------------
+
+To install from the source package, first install the optional dependencies (eg Crypto)::
 
     $ pip install -r requirements.txt
+
+Then install as normal::
+
+    $ python setup.py install
+
 
 Or, if you have `virtualenvwrapper <https://virtualenvwrapper.readthedocs.org/en/latest/>`_
 installed::
 
     $ mkvirtualenv phe
-    $ pip install phe
+    $ pip install -e ".[CLI]"
