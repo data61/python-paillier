@@ -16,4 +16,3 @@ Utilities
     :members:
     :undoc-members:
     :show-inheritance:
-

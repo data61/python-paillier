@@ -2,7 +2,7 @@
 
 import datetime
 import json
-import sys
+
 import click
 import phe
 
