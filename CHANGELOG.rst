@@ -1,3 +1,12 @@
+Version 1.2.0 (2015-01-12)
+=====
+
+Features
+----
+
+-  Command line tool
+
+
 Version 1.1 (2015-01-08)
 =====
 

@@ -22,7 +22,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 def find_version():
     # Note the version is also in the docs/conf.py file
-    return "1.1.3"
+    return "1.2.0-beta.1"
 
 
 setup(
