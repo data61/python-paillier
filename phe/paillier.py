@@ -737,7 +737,7 @@ class EncryptedNumber(object):
           ValueError: You tried to increase the exponent.
         """
         if new_exp > self.exponent:
-            raise ValueError('New exponent %i should be more negative than'
+            raise ValueError('New exponent %i should be more negative than '
                              'old exponent %i' % (new_exp, self.exponent))
         multiplied = self * pow(EncodedNumber.BASE, self.exponent - new_exp)
         multiplied.exponent = new_exp
