@@ -115,16 +115,19 @@ def encrypt(public, plaintext, output=None):
 
     log("Encrypting: {:+.16f}".format(num))
     enc = pub.encrypt(num)
+    serialised = serialise_encrypted(enc)
+    print(serialised, file=output)
+
+
+def serialise_encrypted(enc):
     enc = enc.decrease_exponent_to(-32)
-
     assert enc.exponent == -32
-
     # TODO #8 Decide on serialization for encrypted number...
     obj = json.dumps({
         "v": str(enc.ciphertext()),
         "e": enc.exponent
     })
-    print('{}'.format(obj), file=output)
+    return obj
 
 
 @cli.command()
@@ -153,14 +156,53 @@ def decrypt(private, ciphertext, output):
     priv = phe.PaillierPrivateKey(pub, _lambda, _mu)
 
     log("Decrypting ciphertext")
-    ciphertext_data = json.load(ciphertext)
+    enc = load_encrypted_number(ciphertext, pub)
+    out = priv.decrypt(enc)
+    print(out, file=output)
+
+
+def load_encrypted_number(enc_number_file, pub):
+    ciphertext_data = json.load(enc_number_file)
+    assert 'v' in ciphertext_data
+    assert 'e' in ciphertext_data
     assert ciphertext_data['e'] == -32
+
     enc = phe.EncryptedNumber(pub,
                               int(ciphertext_data['v']),
                               exponent=ciphertext_data['e']
                               )
-    out = priv.decrypt(enc)
-    print(out, file=output)
+    return enc
+
+
+
+@cli.command("addenc")
+@click.argument('public', type=click.File('r'))
+@click.argument('encrypted_a', type=click.File('r'))
+@click.argument('encrypted_b', type=click.File('r'))
+@click.option('--output', type=click.File('w'),
+              help="Save to file instead of stdout")
+def add_encrypted(public, encrypted_a, encrypted_b, output):
+    """Add two encrypted numbers together.
+
+    """
+    log("Loading public key")
+    publickeydata = json.load(public)
+    pub = load_public_key(publickeydata)
+
+    log("Loading first encrypted number")
+    enc_a = load_encrypted_number(encrypted_a, pub)
+
+    log("Loading second encrypted number")
+    enc_b = load_encrypted_number(encrypted_b, pub)
+
+    log("Adding encrypted numbers together")
+
+    enc_result = enc_a + enc_b
+    serialised_result = serialise_encrypted(enc_result)
+    print(serialised_result, file=output)
+
+
+
 
 if __name__ == "__main__":
     cli()
