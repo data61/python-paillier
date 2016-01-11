@@ -45,5 +45,17 @@ class PaillierUtilTest(unittest.TestCase):
             self.assertGreaterEqual(p, 1 << (n-1))
 
 
+class Base64UtilTest(unittest.TestCase):
+
+    def testEncodeDecodePositiveNonZeroInt(self):
+        for a in range(1, 1000000, 100):
+
+            self.assertEqual(a, util.base64_to_int(util.int_to_base64(a)))
+
+    def testFailToEncodeZero(self):
+        with self.assertRaises(AssertionError):
+            util.int_to_base64(0)
+
+
 if __name__ == "__main__":
     unittest.main()

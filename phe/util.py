@@ -15,6 +15,8 @@
 
 import os
 import random
+from base64 import urlsafe_b64encode, urlsafe_b64decode
+from binascii import hexlify, unhexlify
 
 try:
     import gmpy2
@@ -81,3 +83,33 @@ def getprimeover(N):
         return number.getPrime(N, os.urandom)
     else:
         raise NotImplementedError("No pure python implementation sorry")
+
+
+# base64 utils from jwcrypto
+
+def base64url_encode(payload):
+    if not isinstance(payload, bytes):
+        payload = payload.encode('utf-8')
+    encode = urlsafe_b64encode(payload)
+    return encode.decode('utf-8').rstrip('=')
+
+
+def base64url_decode(payload):
+    l = len(payload) % 4
+    if l == 2:
+        payload += '=='
+    elif l == 3:
+        payload += '='
+    elif l != 0:
+        raise ValueError('Invalid base64 string')
+    return urlsafe_b64decode(payload.encode('utf-8'))
+
+
+def base64_to_int(source):
+    return int(hexlify(base64url_decode(source)), 16)
+
+
+def int_to_base64(source):
+    assert source != 0
+    I = hex(source).rstrip("L").lstrip("0x")
+    return base64url_encode(unhexlify((len(I) % 2) * '0' + I))

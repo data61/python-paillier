@@ -22,6 +22,7 @@ The homomorphic properties of the Paillier crypto system are:
    installation
    usage
    caveats
+   cli
    phe
    compatibility
 
