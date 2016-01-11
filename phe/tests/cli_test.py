@@ -106,7 +106,6 @@ class TestConsoleEncryption(TestCase):
     def test_encrypt_float(self):
         numbers = [0.0, 1.1, -0.0001, 100000.01, '1e-20', '-10550e20']
 
-
         for num in numbers:
             result = self.runner.invoke(cli, ['encrypt', self.public_keyfile.name, "--", str(num)])
             assert result.exit_code == 0
@@ -119,3 +118,57 @@ class TestConsoleEncryption(TestCase):
             result = self.runner.invoke(cli, ['encrypt', self.public_keyfile.name, "--", str(num)])
             assert result.exit_code == 0
 
+    def test_decrypt_positive_integers(self):
+        numbers = [0, 1, 2, 5, 10, '1', '10550']
+
+        for num in numbers:
+            with tempfile.NamedTemporaryFile() as encfile:
+                fname = encfile.name
+
+                self.runner.invoke(cli, [
+                    'encrypt', self.public_keyfile.name, str(num), '--output', fname
+                ])
+
+                result = self.runner.invoke(cli, [
+                    'decrypt', self.private_keyfile.name, fname
+                ])
+                assert result.exit_code == 0
+
+                assert "{}".format(num) in result.output
+
+    def test_decrypt_signed_integers(self):
+        numbers = [0, 1, -1, 10, '1', '-10550']
+
+        for num in numbers:
+            with tempfile.NamedTemporaryFile() as encfile:
+                fname = encfile.name
+                self.runner.invoke(cli, [
+                    'encrypt', self.public_keyfile.name, '--output', fname, '--', str(num),
+                ])
+
+                result = self.runner.invoke(cli, [
+                    'decrypt', self.private_keyfile.name, fname
+                ])
+                assert result.exit_code == 0
+
+                print(result.output)
+                assert "{}".format(num) in result.output
+
+    def test_decrypt_float(self):
+        numbers = [0.0, 1.1, -0.0001, 100000.01, '1e-20', '-10550e20']
+
+        for num in numbers:
+            with tempfile.NamedTemporaryFile() as encfile:
+                fname = encfile.name
+                self.runner.invoke(cli, [
+                    'encrypt', self.public_keyfile.name, '--output', fname, '--', str(num),
+                ])
+
+                with tempfile.NamedTemporaryFile() as outfile:
+                    result = self.runner.invoke(cli, [
+                        'decrypt', self.private_keyfile.name, fname, '--output', outfile.name
+                    ])
+                    assert result.exit_code == 0
+
+                    out = outfile.read()
+                    self.assertAlmostEqual(float(num), float(out))
