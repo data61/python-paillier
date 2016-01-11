@@ -392,7 +392,6 @@ class TestFuzz(TestConsoleHelpers):
             self.assertAlmostEqual(float(a + b), float(out))
 
 
-    @unittest.expectedFailure
     def test_multiply_random_ints(self):
         """
         """
