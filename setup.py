@@ -22,7 +22,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 def find_version():
     # Note the version is also in the docs/conf.py file
-    return "1.2.0-beta.1"
+    # We use semantic versioning - semver.org
+    return "1.2.1"
 
 
 setup(
@@ -52,11 +53,11 @@ setup(
     packages=find_packages(exclude=['tests*']),
     entry_points={
         'console_scripts': [
-            'pheutil = phe.command_line:cli [CLI]'
+            'pheutil = phe.command_line:cli [cli]'
         ],
     },
     extras_require={
-        'CLI': ['click']
+        'cli': ['click']
     },
     install_requires=['gmpy2'],
     tests_require=['numpy', 'click'],
