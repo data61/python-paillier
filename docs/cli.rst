@@ -71,3 +71,5 @@ Bash completion can be enabled by adding the following to your `.bashrc` file::
 
     eval "$(_PHEUTIL_COMPLETE=source pheutil)"
 
+Further information on bash completion can be found in the `click <http://click.pocoo.org/5/bashcomplete/>`_
+documentation.

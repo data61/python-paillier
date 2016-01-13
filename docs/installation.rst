@@ -3,6 +3,10 @@
 Installation
 ============
 
+.. note::
+
+    This library requires a minimum Python version of at least 3.3.
+
 Using pip
 ---------
 
@@ -11,9 +15,9 @@ Using pip at the command line, to install the base library from `PyPi <https://p
     $ pip install phe
 
 
-To also install the command line utility, introduced at version 1.2::
+To also install the :ref:`command line utility <cli>`, introduced at version 1.2::
 
-    pip install "phe[CLI]>1.2"
+    pip install "phe[cli]>1.2"
 
 
 

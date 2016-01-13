@@ -1,7 +1,3 @@
-.. phe documentation master file, created by
-   sphinx-quickstart on Wed Jun 11 15:00:09 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 python-paillier
 ===============
@@ -35,6 +31,8 @@ The homomorphic properties of the Paillier crypto system are:
 
 Example
 -------
+
+.. doctest::
 
     >>> from phe import paillier
     >>> public_key, private_key = paillier.generate_paillier_keypair()
