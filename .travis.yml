@@ -21,6 +21,7 @@ before_install:
   - sudo apt-get install -qq python3-crypto
   - sudo apt-get install -qq libgmp-dev libmpfr-dev
   - sudo apt-get install -qq libgmp3-dev libgmp3c2 libmpfr4 libmpc-dev libmpc2
+  - pip install --upgrade pip
   # Install gmpy2 dependency
   - if [[ $TEST_GMPY == "true" ]]; then
       wget ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz;
@@ -37,6 +38,7 @@ before_install:
       pip install pycrypto==2.6.1;
     fi
 install:
+  - python --version
   - pip install -r requirements.txt
   - pip install -r docs/requirements.txt
   - pip install coveralls
