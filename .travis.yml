@@ -38,12 +38,9 @@ before_install:
       pip install pycrypto==2.6.1;
     fi
 install:
-  - python --version
   - pip install -r requirements.txt
   - pip install -r docs/requirements.txt
   - pip install coveralls
-# command to run tests
-script: nosetests -v --with-coverage --cover-package=phe
-  
+script: coverage run --source=phe setup.py test
 after_success:
   coveralls
