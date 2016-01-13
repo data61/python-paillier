@@ -39,5 +39,9 @@ before_install:
 install:
   - pip install nose
   - pip install click
+  - pip install coveralls
 # command to run tests
-script:  nosetests -v
+script:
+  coverage run --source=phe setup.py test
+after_success:
+  coveralls
