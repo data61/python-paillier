@@ -43,11 +43,7 @@ install:
   - pip install -r docs/requirements.txt
   - pip install coveralls
 # command to run tests
-script:
-  - nosetests --with-coverage --cover-package=phe -v
-  - cd docs;
-    make html;
-    make doctest;
-    cd ..;
+script: nosetests -v --with-coverage --cover-package=phe
+  
 after_success:
   coveralls
