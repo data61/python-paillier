@@ -6,7 +6,7 @@ Command Line Utility
 The command line utility is not installed by default. When installing with pip you
 must specify the optional extra eg::
 
-    pip install "phe[CLI]>1.2" --upgrade
+    pip install "phe[cli]" --upgrade
 
 
 After :ref:`installation`, the **pheutil** command line program will be installed on your path.
@@ -66,3 +66,8 @@ To use the command line client without installing `python-paillier`, run the
 :mod:`phe.command_line` module from the project root::
 
     python -m phe.command_line
+
+Bash completion can be enabled by adding the following to your `.bashrc` file::
+
+    eval "$(_PHEUTIL_COMPLETE=source pheutil)"
+
