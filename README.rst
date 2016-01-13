@@ -1,15 +1,17 @@
-python-paillier
+python-paillier  |release|
 ===============
 
-+--------------+------------+-----------+
-|  release     | master     | develop   |
-+==============+============+===========+
-|  |release|   | |travisM|  | |travisD| |
-+--------------+------------+-----------+
-|              | |reqM|     | |reqD|    |
-+--------------+------------+-----------+
-|              | |rtdM|     | |rtdD|    |
-+--------------+------------+-----------+
++---------------------+-----------------+
+|       master        |    develop      |
++=====================+=================+
+|      |travisM|      |   |travisD|     |
++---------------------+-----------------+
+|      |rtdM|         |   |rtdD|        |
++---------------------+-----------------+
+|      |coverageM|    |   |coverageD|   |
++---------------------+-----------------+
+|      |reqM|         |   |reqD|        |
++---------------------+-----------------+
 
 A library for Partially Homomorphic Encryption in Python.
 
@@ -72,5 +74,13 @@ expert. The crypto parts are mercifully short, however.
    :alt: Documentation Status
 
 .. |rtdD| image:: https://readthedocs.org/projects/python-paillier/badge/?version=develop
-    :target: http://python-paillier.readthedocs.org/en/latest/?badge=develop
-    :alt: Documentation Status
+   :target: http://python-paillier.readthedocs.org/en/latest/?badge=develop
+   :alt: Documentation Status
+    
+.. |coverageM| image:: https://coveralls.io/repos/NICTA/python-paillier/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/NICTA/python-paillier?branch=master
+  
+.. |coverageD| image:: https://coveralls.io/repos/NICTA/python-paillier/badge.svg?branch=develop&service=github
+    :target: https://coveralls.io/github/NICTA/python-paillier?branch=develop
+
+
