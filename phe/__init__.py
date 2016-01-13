@@ -6,4 +6,7 @@ from phe.paillier import PaillierPrivateKeyring
 
 import phe.util
 
-import phe.command_line
+try:
+    import phe.command_line
+except ImportError:
+    pass

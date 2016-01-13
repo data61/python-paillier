@@ -23,7 +23,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 def find_version():
     # Note the version is also in the docs/conf.py file
     # We use semantic versioning - semver.org
-    return "1.2.1"
+    return "1.2.2"
 
 
 setup(
