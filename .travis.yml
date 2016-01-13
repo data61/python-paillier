@@ -21,7 +21,7 @@ before_install:
   - sudo apt-get install -qq python3-crypto
   - sudo apt-get install -qq libgmp-dev libmpfr-dev
   - sudo apt-get install -qq libgmp3-dev libgmp3c2 libmpfr4 libmpc-dev libmpc2
-  # Install gmpy2 dependencies
+  # Install gmpy2 dependency
   - if [[ $TEST_GMPY == "true" ]]; then
       wget ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz;
       tar xzvf mpc-1.0.3.tar.gz;
@@ -42,7 +42,7 @@ install:
   - pip install coveralls
 # command to run tests
 script:
-  - coverage run --source=phe setup.py test
+  - nosetests --with-coverage --cover-package=phe -v
   - cd docs;
     make html;
     make doctest;
