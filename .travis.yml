@@ -46,7 +46,5 @@ install:
   - pip install numpy
   - pip install nose
   - pip install click
-  - pip install coveralls
-script: 
- - nosetests -v
+script:  nosetests -v
 
