@@ -44,8 +44,9 @@ before_install:
 
 install:
   - pip install numpy
+  - pip install nose
   - pip install click
   - pip install coveralls
-script: nosetests --with-coverage --cover-package=phe -v
-after_success:
-  coveralls
+script: 
+ - nosetests -v
+
