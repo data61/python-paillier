@@ -41,10 +41,11 @@ before_install:
   - if [[ $TEST_PYCRYPTO == "true" ]]; then
       pip install pycrypto==2.6.1;
     fi
-
 install:
   - pip install numpy
-  - pip install nose
   - pip install click
+  - which pip
+  - which python
+  - which nosetests
 script:  nosetests -v
 
