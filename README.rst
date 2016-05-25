@@ -36,7 +36,7 @@ Or use nose::
 Code History
 ------------
 
-Developed at Data61.
+Developed at `Data61 | CSIRO <http://data61.csiro.au>`_.
 
 Parts derived from the Apache licensed Google project:
 https://code.google.com/p/encrypted-bigquery-client/

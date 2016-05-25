@@ -17,16 +17,12 @@ The homomorphic properties of the Paillier crypto system are:
 
    installation
    usage
+   serialisation
    caveats
    cli
    phe
    compatibility
 
-
-.. toctree::
-   :maxdepth: 1
-
-   alternatives
 
 
 Example
