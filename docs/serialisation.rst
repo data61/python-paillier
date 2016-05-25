@@ -15,6 +15,10 @@ case.
 Basic JSON Serialisation
 ------------------------
 
+This basic serialisation method is an example of serialising a vector of encrypted numbers.
+Note that if you are only using the python-paillier library **g** will always be **n + 1**,
+so these is no need to serialise it as part of the public key.
+
 To send a list of values encrypted against one public key, the following is one way to serialise::
 
     >>> import json
@@ -46,7 +50,8 @@ JWK Serialisation
 -----------------
 
 This serialisation scheme is used by the :ref:`cli`, and is based on the
-`JSON Web Key (JWK) <https://tools.ietf.org/html/rfc7517#section-4>`_ format.
+`JSON Web Key (JWK) <https://tools.ietf.org/html/rfc7517#section-4>`_ format. This
+serialisation scheme should be used to increase compatibility between libraries.
 
 .. _b64:
 
@@ -135,4 +140,5 @@ Example of a 256 bit private key::
 
     "kty" and "alg" values should be registered in the
     `IANA "JSON Web Key Types" registry <https://tools.ietf.org/html/rfc7518#section-6.1>`_
-    established by JWA. We have not registered DAJ.
+    established by JWA. We have not registered **DAJ** or **PAI-GN1** - however we intend to begin that
+    conversation.
