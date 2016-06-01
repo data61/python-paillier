@@ -242,7 +242,7 @@ class PaillierPrivateKey(object):
         encoded = self.decrypt_encoded(encrypted_number)
         return encoded.decode()
 
-    def decrypt_encoded(self, encrypted_number):
+    def decrypt_encoded(self, encrypted_number, Encoding=None):
         """Return the `EncodedNumber` decrypted from `encrypted_number`.
 
         Args:
@@ -267,8 +267,11 @@ class PaillierPrivateKey(object):
             raise ValueError('encrypted_number was encrypted against a '
                              'different key!')
 
+        if Encoding is None:
+            Encoding = EncodedNumber
+
         encoded = self.raw_decrypt(encrypted_number.ciphertext(be_secure=False))
-        return EncodedNumber(self.public_key, encoded,
+        return Encoding(self.public_key, encoded,
                              encrypted_number.exponent)
 
     def raw_decrypt(self, ciphertext):
