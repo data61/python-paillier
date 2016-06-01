@@ -168,8 +168,25 @@ class PaillierPublicKey(object):
           ValueError: if *value* is out of range or *precision* is so
             high that *value* is rounded to zero.
         """
-        encoding = EncodedNumber.encode(self, value, precision)
 
+        if isinstance(value, EncodedNumber):
+            encoding = value
+        else:
+            encoding = EncodedNumber.encode(self, value, precision)
+
+        return self.encrypt_encoded(encoding, r_value)
+
+    def encrypt_encoded(self, encoding, r_value):
+        """Paillier encrypt an encoded value.
+
+        Args:
+          encoding: The EncodedNumber instance.
+          r_value (int): obfuscator for the ciphertext; by default (i.e.
+            if *r_value* is None), a random value is used.
+
+        Returns:
+          EncryptedNumber: An encryption of *value*.
+        """
         # If r_value is None, obfuscate in a call to .obfuscate() (below)
         obfuscator = r_value or 1
         ciphertext = self.raw_encrypt(encoding.encoding, r_value=obfuscator)
