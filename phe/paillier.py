@@ -168,8 +168,25 @@ class PaillierPublicKey(object):
           ValueError: if *value* is out of range or *precision* is so
             high that *value* is rounded to zero.
         """
-        encoding = EncodedNumber.encode(self, value, precision)
 
+        if isinstance(value, EncodedNumber):
+            encoding = value
+        else:
+            encoding = EncodedNumber.encode(self, value, precision)
+
+        return self.encrypt_encoded(encoding, r_value)
+
+    def encrypt_encoded(self, encoding, r_value):
+        """Paillier encrypt an encoded value.
+
+        Args:
+          encoding: The EncodedNumber instance.
+          r_value (int): obfuscator for the ciphertext; by default (i.e.
+            if *r_value* is None), a random value is used.
+
+        Returns:
+          EncryptedNumber: An encryption of *value*.
+        """
         # If r_value is None, obfuscate in a call to .obfuscate() (below)
         obfuscator = r_value or 1
         ciphertext = self.raw_encrypt(encoding.encoding, r_value=obfuscator)
@@ -225,7 +242,7 @@ class PaillierPrivateKey(object):
         encoded = self.decrypt_encoded(encrypted_number)
         return encoded.decode()
 
-    def decrypt_encoded(self, encrypted_number):
+    def decrypt_encoded(self, encrypted_number, Encoding=None):
         """Return the `EncodedNumber` decrypted from `encrypted_number`.
 
         Args:
@@ -250,8 +267,11 @@ class PaillierPrivateKey(object):
             raise ValueError('encrypted_number was encrypted against a '
                              'different key!')
 
+        if Encoding is None:
+            Encoding = EncodedNumber
+
         encoded = self.raw_decrypt(encrypted_number.ciphertext(be_secure=False))
-        return EncodedNumber(self.public_key, encoded,
+        return Encoding(self.public_key, encoded,
                              encrypted_number.exponent)
 
     def raw_decrypt(self, ciphertext):

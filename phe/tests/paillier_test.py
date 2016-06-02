@@ -245,13 +245,22 @@ class PaillierTestEncodedNumber(PaillierTest):
 
     def testEncryptFloatDecryptFloat2(self):
         # large positive number
-        enc = self.EncodedNumberCls.encode(self.public_key, 2.1 ** 20)
-        self.assertEqual(2.1 ** 20, enc.decode())
+        encoded = self.EncodedNumberCls.encode(self.public_key, 2.1 ** 20)
+        self.assertEqual(2.1 ** 20, encoded.decode())
+
+        encrypted = self.public_key.encrypt(encoded)
+
+        decrypted_but_encoded = self.private_key.decrypt_encoded(encrypted, self.EncodedNumberCls)
+
+        self.assertAlmostEqual(2.1 ** 20, decrypted_but_encoded.decode())
 
     def testEncryptFloatDecryptFloat3(self):
         # large negative number
-        enc = self.EncodedNumberCls.encode(self.public_key, -2.1 ** 63)
-        self.assertAlmostEqual(-2.1 ** 63, enc.decode())
+        encoded = self.EncodedNumberCls.encode(self.public_key, -2.1 ** 63)
+        self.assertAlmostEqual(-2.1 ** 63, encoded.decode())
+        encrypted = self.public_key.encrypt(encoded)
+        decrypted_but_encoded = self.private_key.decrypt_encoded(encrypted, self.EncodedNumberCls)
+        self.assertAlmostEqual(-2.1 ** 63, decrypted_but_encoded.decode())
 
     def testEncodedDecreaseExponentTo0(self):
         # Check that decrease_exponent_to does what it says
