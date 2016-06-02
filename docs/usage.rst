@@ -37,7 +37,7 @@ In any event, you can then start encrypting numbers::
     >>> encrypted_number_list = [public_key.encrypt(x) for x in secret_number_list]
 
 Presumably, you would now share the ciphertext with whoever is playing Role 2
-(see `Serialisation`_ and :ref:`compatibility`).
+(see :ref:`serialisation` and :ref:`compatibility`).
 
 
 Decryption
@@ -63,7 +63,7 @@ This party does not have access to the private keys, and typically performs oper
 supplied encrypted data with their own, unencrypted data.
 
 Once this party has received some :class:`~phe.paillier.EncryptedNumber` instances (e.g. see
-`Serialisation`_), it can perform basic mathematical operations supported by the Paillier
+:ref:`serialisation`), it can perform basic mathematical operations supported by the Paillier
 encryption:
 
 1. Addition of an :class:`~phe.paillier.EncryptedNumber` to a scalar
