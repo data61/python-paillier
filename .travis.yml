@@ -5,7 +5,10 @@ env:
 
 # Note travis times out with the following:
 #  - TEST_PYCRYPTO="true" TEST_GMPY="false"
-  
+
+# Inorder to test with and without some libraries, we explicitly
+# install deps instead of installing from the requirements file
+
 python:
   - "3.3"
   - "3.4"
@@ -21,7 +24,9 @@ before_install:
   - sudo apt-get install -qq python3-crypto
   - sudo apt-get install -qq libgmp-dev libmpfr-dev
   - sudo apt-get install -qq libgmp3-dev libgmp3c2 libmpfr4 libmpc-dev libmpc2
-  # Install gmpy2 dependencies
+  - pip install --upgrade pip
+  - pip install --upgrade nose
+  # Install gmpy2 dependency
   - if [[ $TEST_GMPY == "true" ]]; then
       wget ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz;
       tar xzvf mpc-1.0.3.tar.gz;
@@ -37,7 +42,7 @@ before_install:
       pip install pycrypto==2.6.1;
     fi
 install:
-  - pip install nose
+  - pip install numpy
   - pip install click
-# command to run tests
 script:  nosetests -v
+

@@ -32,7 +32,7 @@ from phe.util import invert, powmod, getprimeover
 DEFAULT_KEYSIZE = 2048
 
 def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
-    """Return a new PaillierPublicKey and PaillierPrivateKey.
+    """Return a new :class:`PaillierPublicKey` and :class:`PaillierPrivateKey`.
 
     Add the private key to *private_keyring* if given.
 
@@ -44,7 +44,7 @@ def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
 
     Returns:
       tuple: The generated :class:`PaillierPublicKey` and
-        :class:`PaillierPrivateKey`
+      :class:`PaillierPrivateKey`
     """
     p = q = n = None
     n_len = 0
@@ -168,8 +168,25 @@ class PaillierPublicKey(object):
           ValueError: if *value* is out of range or *precision* is so
             high that *value* is rounded to zero.
         """
-        encoding = EncodedNumber.encode(self, value, precision)
 
+        if isinstance(value, EncodedNumber):
+            encoding = value
+        else:
+            encoding = EncodedNumber.encode(self, value, precision)
+
+        return self.encrypt_encoded(encoding, r_value)
+
+    def encrypt_encoded(self, encoding, r_value):
+        """Paillier encrypt an encoded value.
+
+        Args:
+          encoding: The EncodedNumber instance.
+          r_value (int): obfuscator for the ciphertext; by default (i.e.
+            if *r_value* is None), a random value is used.
+
+        Returns:
+          EncryptedNumber: An encryption of *value*.
+        """
         # If r_value is None, obfuscate in a call to .obfuscate() (below)
         obfuscator = r_value or 1
         ciphertext = self.raw_encrypt(encoding.encoding, r_value=obfuscator)
@@ -206,6 +223,9 @@ class PaillierPrivateKey(object):
     def decrypt(self, encrypted_number):
         """Return the decrypted & decoded plaintext of *encrypted_number*.
 
+        Uses the default :class:`EncodedNumber`, if using an alternative encoding
+        scheme, use :meth:`decrypt_encoded` or :meth:`raw_decrypt` instead.
+
         Args:
           encrypted_number (EncryptedNumber): an
             :class:`EncryptedNumber` with a public key that matches this
@@ -225,13 +245,16 @@ class PaillierPrivateKey(object):
         encoded = self.decrypt_encoded(encrypted_number)
         return encoded.decode()
 
-    def decrypt_encoded(self, encrypted_number):
-        """Return the `EncodedNumber` decrypted from `encrypted_number`.
+    def decrypt_encoded(self, encrypted_number, Encoding=None):
+        """Return the :class:`EncodedNumber` decrypted from *encrypted_number*.
 
         Args:
           encrypted_number (EncryptedNumber): an
             :class:`EncryptedNumber` with a public key that matches this
             private key.
+          Encoding (class): A class to use instead of :class:`EncodedNumber`, the
+            encoding used for the *encrypted_number* - used to support alternative
+            encodings.
 
         Returns:
           :class:`EncodedNumber`: The decrypted plaintext.
@@ -250,21 +273,23 @@ class PaillierPrivateKey(object):
             raise ValueError('encrypted_number was encrypted against a '
                              'different key!')
 
+        if Encoding is None:
+            Encoding = EncodedNumber
+
         encoded = self.raw_decrypt(encrypted_number.ciphertext(be_secure=False))
-        return EncodedNumber(self.public_key, encoded,
+        return Encoding(self.public_key, encoded,
                              encrypted_number.exponent)
 
     def raw_decrypt(self, ciphertext):
         """Decrypt raw ciphertext and return raw plaintext.
 
         Args:
-          ciphertext (int): an int (usually from
-            :meth:`encrypted_number.ciphertext()`) that is to be
-            Paillier decrypted.
+          ciphertext (int): (usually from :meth:`EncryptedNumber.ciphertext()`)
+            that is to be Paillier decrypted.
 
         Returns:
           int: Paillier decryption of ciphertext. This is a positive
-            integer < :attr:`public_key.n`.
+          integer < :attr:`public_key.n`.
 
         Raises:
           TypeError: if ciphertext is not an int.
@@ -281,7 +306,7 @@ class PaillierPrivateKey(object):
 class PaillierPrivateKeyring(Mapping):
     """Holds several private keys and can decrypt using any of them.
 
-    Acts like a dict, supports :func:`del`, and :func:`[]` for getting,
+    Acts like a dict, supports :func:`del`, and indexing with **[]**,
     but adding keys is done using :meth:`add`.
 
     Args:
@@ -321,14 +346,13 @@ class PaillierPrivateKeyring(Mapping):
         """Return the decrypted & decoded plaintext of *encrypted_number*.
 
         Args:
-          encrypted_number (EncryptedNumber): an
-            :class:`EncryptedNumber` encrypted against a known public
+          encrypted_number (EncryptedNumber): encrypted against a known public
             key, i.e., one for which the private key is on this keyring.
 
         Returns:
           the int or float that *encrypted_number* was holding. N.B. if
-            the number returned is an integer, it will not be of type
-            float.
+          the number returned is an integer, it will not be of type
+          float.
 
         Raises:
           KeyError: If the keyring does not hold the private key that
@@ -347,6 +371,12 @@ class EncodedNumber(object):
     If you want to manually encode a number for Paillier encryption,
     then use :meth:`encode`, if de-serializing then use
     :meth:`__init__`.
+
+
+    .. note::
+        If working with other Paillier libraries you will have to agree on
+        a specific :attr:`BASE` and :attr:`LOG2_BASE` - inheriting from this
+        class and overriding those two attributes will enable this.
 
     Notes:
       Paillier encryption is only defined for non-negative integers less
@@ -425,8 +455,8 @@ class EncodedNumber(object):
     """
     BASE = 16
     """Base to use when exponentiating. Larger `BASE` means
-      that :attr:`exponent` leaks less information. If you vary this,
-      you'll have to manually inform anyone decoding your numbers.
+    that :attr:`exponent` leaks less information. If you vary this,
+    you'll have to manually inform anyone decoding your numbers.
     """
     LOG2_BASE = math.log(BASE, 2)
     FLOAT_MANTISSA_BITS = sys.float_info.mant_dig
@@ -484,7 +514,7 @@ class EncodedNumber(object):
 
         Returns:
           EncodedNumber: Encoded form of *scalar*, ready for encryption
-            against *public_key*.
+          against *public_key*.
         """
         # Calculate the maximum exponent for desired precision
         if precision is None:

@@ -70,6 +70,10 @@ extensions = [
     #'sphinxcontrib.napoleon'  # Sphinx 1.2
 ]
 
+# Don't test blocks that are not doctest directive blocks - e.g. all the
+# code in alternitives.rst
+doctest_test_doctest_blocks = ""
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

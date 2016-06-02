@@ -1,7 +1,6 @@
 """
 Benchmark key generation, encryption and decryption.
 
-Also compares the speed of modexp and invert between OpenSSL and libGMP.
 """
 
 import random
