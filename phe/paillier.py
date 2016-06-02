@@ -31,6 +31,7 @@ from phe.util import invert, powmod, getprimeover
 
 DEFAULT_KEYSIZE = 2048
 
+
 def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
     """Return a new :class:`PaillierPublicKey` and :class:`PaillierPrivateKey`.
 
