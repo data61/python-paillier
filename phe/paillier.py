@@ -56,9 +56,8 @@ def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
         n_len = n.bit_length()
     # Simpler Paillier variant with g=n+1 results in lambda equal to phi
     # and mu is phi inverse mod n.
-    g = n + 1
 
-    public_key = PaillierPublicKey(g, n)
+    public_key = PaillierPublicKey(n)
 
     phi_n = (p - 1) * (q - 1)
     Lambda = phi_n
@@ -76,8 +75,8 @@ class PaillierPublicKey(object):
     """Contains a public key and associated encryption methods.
 
     Args:
-      g (int): part of the public key - see Paillier's paper.
-      n (int): part of the public key - see Paillier's paper.
+
+      n (int): the modulus of the public key - see Paillier's paper.
 
     Attributes:
       g (int): part of the public key - see Paillier's paper.
@@ -87,8 +86,8 @@ class PaillierPublicKey(object):
         increased, if you are happy to redefine "safely" and lower the
         chance of detecting an integer overflow.
     """
-    def __init__(self, g, n):
-        self.g = g
+    def __init__(self, n):
+        self.g = n + 1
         self.n = n
         self.nsquare = n * n
         self.max_int = n // 3 - 1
@@ -100,10 +99,10 @@ class PaillierPublicKey(object):
         return "<PaillierPublicKey {}>".format(publicKeyHash[:10])
 
     def __eq__(self, other):
-        return self.g == other.g and self.n == other.n
+        return self.n == other.n
 
     def __hash__(self):
-        return hash((self.g, self.n))
+        return hash(self.n)
 
     def raw_encrypt(self, plaintext, r_value=None):
         """Paillier encryption of a positive integer plaintext < :attr:`n`.
@@ -131,10 +130,12 @@ class PaillierPublicKey(object):
         if self.n - self.max_int <= plaintext < self.n:
             # Very large plaintext, take a sneaky shortcut using inverses
             neg_plaintext = self.n - plaintext  # = abs(plaintext - nsquare)
-            neg_ciphertext = powmod(self.g, neg_plaintext, self.nsquare)
+            neg_ciphertext = (self.n * neg_plaintext + 1) % self.nsquare
             nude_ciphertext = invert(neg_ciphertext, self.nsquare)
         else:
-            nude_ciphertext = powmod(self.g, plaintext, self.nsquare)
+            # we chose g = n + 1, so that we can exploit the fact that 
+            # (n+1)^plaintext = n*plaintext + 1 mod n^2
+            nude_ciphertext = (self.n * plaintext + 1) % self.nsquare
 
         r = r_value or self.get_random_lt_n()
         obfuscator = powmod(r, self.n, self.nsquare)
