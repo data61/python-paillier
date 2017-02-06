@@ -16,6 +16,8 @@
 # along with pyphe.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+import random
+import math
 
 from phe import util
 
@@ -43,6 +45,13 @@ class PaillierUtilTest(unittest.TestCase):
         for n in range(2, 50):
             p = util.getprimeover(n)
             self.assertGreaterEqual(p, 1 << (n-1))
+            
+    def testIsqrt(self):
+        for _ in range(100):
+            n = random.randint(2, 10000000)
+            nsq = n*n
+            self.assertEqual(int(math.floor(math.sqrt(n))), util.isqrt(n))
+            self.assertEqual(util.isqrt(nsq), util.improved_i_sqrt(nsq))
 
 
 class Base64UtilTest(unittest.TestCase):

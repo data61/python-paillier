@@ -35,8 +35,8 @@ class PaillierGeneric(unittest.TestCase):
         self.assertTrue(hasattr(public_key, 'g'))
         self.assertTrue(hasattr(public_key, 'n'))
 
-        self.assertTrue(hasattr(private_key, 'mu'))
-        self.assertTrue(hasattr(private_key, 'Lambda'))
+        self.assertTrue(hasattr(private_key, 'p'))
+        self.assertTrue(hasattr(private_key, 'q'))
         self.assertTrue(hasattr(private_key, 'public_key'))
 
         self.assertTrue(str(public_key).startswith('<PaillierPublicKey '))
@@ -50,8 +50,8 @@ class PaillierGeneric(unittest.TestCase):
             self.assertTrue(hasattr(public_key, 'g'))
             self.assertTrue(hasattr(public_key, 'n'))
 
-            self.assertTrue(hasattr(private_key, 'mu'))
-            self.assertTrue(hasattr(private_key, 'Lambda'))
+            self.assertTrue(hasattr(private_key, 'p'))
+            self.assertTrue(hasattr(private_key, 'q'))
 
             # Check that no exceptions are raised representing these keys
             repr(public_key)
@@ -111,7 +111,7 @@ class PaillierTestRawEncryption(PaillierTest):
 
     def testRawEncryptDecryptRegression0(self):
         public_key = paillier.PaillierPublicKey(6497955158, 126869)
-        private_key = paillier.PaillierPrivateKey(public_key, 31536, 53022)
+        private_key = paillier.PaillierPrivateKey(public_key, 293, 433)
 
         ciphertext = public_key.raw_encrypt(10100, 74384)
         self.assertEqual(848742150, ciphertext)
