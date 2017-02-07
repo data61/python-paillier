@@ -25,8 +25,7 @@ To send a list of values encrypted against one public key, the following is one 
 
     >>> import json
     >>> enc_with_one_pub_key = {}
-    >>> enc_with_one_pub_key['public_key'] = {'g': public_key.g,
-    ...                                       'n': public_key.n}
+    >>> enc_with_one_pub_key['public_key'] = {'n': public_key.n}
     >>> enc_with_one_pub_key['values'] = [
     ...     (str(x.ciphertext()), x.exponent) for x in encrypted_number_list
     ... ]
@@ -36,8 +35,7 @@ Deserialisation of the above scheme might look as follows::
 
     >>> received_dict = json.loads(serialised)
     >>> pk = received_dict['public_key']
-    >>> public_key_rec = paillier.PaillierPublicKey(g=int(pk['g']),
-    ...                                             n=int(pk['n']))
+    >>> public_key_rec = paillier.PaillierPublicKey(n=int(pk['n']))
     >>> enc_nums_rec = [
     ...     paillier.EncryptedNumber(public_key_rec, int(x[0]), int(x[1]))
     ...     for x in received_dict['values']
