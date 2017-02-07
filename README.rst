@@ -53,20 +53,20 @@ expert. The crypto parts are mercifully short, however.
     :alt: Latest released version on PyPi
 
 
-.. |travisM| image:: https://travis-ci.org/NICTA/python-paillier.svg?branch=master
-    :target: https://travis-ci.org/NICTA/python-paillier
+.. |travisM| image:: https://travis-ci.org/n1analytics/python-paillier.svg?branch=master
+    :target: https://travis-ci.org/n1analytics/python-paillier
     :alt: CI status of Master
 
-.. |travisD| image:: https://travis-ci.org/NICTA/python-paillier.svg?branch=develop
-    :target: https://travis-ci.org/NICTA/python-paillier
+.. |travisD| image:: https://travis-ci.org/n1analytics/python-paillier.svg?branch=develop
+    :target: https://travis-ci.org/n1analytics/python-paillier
     :alt: CI status of develop
 
-.. |reqM| image:: https://requires.io/github/NICTA/python-paillier/requirements.svg?branch=master
-    :target: https://requires.io/github/NICTA/python-paillier/requirements/?branch=master
+.. |reqM| image:: https://requires.io/github/n1analytics/python-paillier/requirements.svg?branch=master
+    :target: https://requires.io/github/n1analytics/python-paillier/requirements/?branch=master
     :alt: Requirements Status of master
 
-.. |reqD| image:: https://requires.io/github/NICTA/python-paillier/requirements.svg?branch=develop
-    :target: https://requires.io/github/NICTA/python-paillier/requirements/?branch=develop
+.. |reqD| image:: https://requires.io/github/n1analytics/python-paillier/requirements.svg?branch=develop
+    :target: https://requires.io/github/n1analytics/python-paillier/requirements/?branch=develop
     :alt: Requirements Status of develop
 
 .. |rtdM| image:: https://readthedocs.org/projects/python-paillier/badge/?version=stable
@@ -77,10 +77,10 @@ expert. The crypto parts are mercifully short, however.
    :target: http://python-paillier.readthedocs.org/en/latest/?badge=develop
    :alt: Documentation Status
     
-.. |coverageM| image:: https://coveralls.io/repos/NICTA/python-paillier/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/NICTA/python-paillier?branch=master
+.. |coverageM| image:: https://coveralls.io/repos/n1analytics/python-paillier/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/n1analytics/python-paillier?branch=master
   
-.. |coverageD| image:: https://coveralls.io/repos/NICTA/python-paillier/badge.svg?branch=develop&service=github
-    :target: https://coveralls.io/github/NICTA/python-paillier?branch=develop
+.. |coverageD| image:: https://coveralls.io/repos/n1analytics/python-paillier/badge.svg?branch=develop&service=github
+    :target: https://coveralls.io/github/n1analytics/python-paillier?branch=develop
 
 
