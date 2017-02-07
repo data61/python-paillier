@@ -40,7 +40,7 @@ class TestConsoleBasics(TestCase):
 
         assert 'pub' in priv_key
         assert 'kty' in priv_key
-        assert 'lambda' in priv_key
+        assert 'p' in priv_key
 
     def test_generate_keypair_to_stdout(self):
         runner = CliRunner()
@@ -49,7 +49,7 @@ class TestConsoleBasics(TestCase):
 
         assert 'pub' in result.output
         assert 'kty' in result.output
-        assert 'lambda' in result.output
+        assert 'p' in result.output
 
     def test_extract_public_key(self):
         runner = CliRunner()
@@ -68,8 +68,8 @@ class TestConsoleBasics(TestCase):
                 assert '"n":' in written_data
                 assert '"alg":' in written_data
 
-                assert '"mu":' not in written_data
-                assert '"lamdba":' not in written_data
+                assert '"p":' not in written_data
+                assert '"q":' not in written_data
 
 
 class TestConsoleEncryption(TestCase):
