@@ -27,7 +27,7 @@ try:
 except ImportError:
     Mapping = dict
 
-from phe.util import invert, powmod, getprimeover
+from phe.util import invert, powmod, getprimeover, isqrt
 
 DEFAULT_KEYSIZE = 2048
 
@@ -51,25 +51,19 @@ def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
     n_len = 0
     while n_len != n_length:
         p = getprimeover(n_length // 2)
-        q = getprimeover(n_length // 2)
+        q = p
+        while q == p:
+            q = getprimeover(n_length // 2)
         n = p * q
         n_len = n.bit_length()
-    # Simpler Paillier variant with g=n+1 results in lambda equal to phi
-    # and mu is phi inverse mod n.
 
     public_key = PaillierPublicKey(n)
-
-    phi_n = (p - 1) * (q - 1)
-    Lambda = phi_n
-    mu = invert(phi_n, n)
-
-    private_key = PaillierPrivateKey(public_key, Lambda, mu)
+    private_key = PaillierPrivateKey(public_key, p, q)
 
     if private_keyring is not None:
         private_keyring.add(private_key)
 
     return public_key, private_key
-
 
 class PaillierPublicKey(object):
     """Contains a public key and associated encryption methods.
@@ -204,20 +198,66 @@ class PaillierPrivateKey(object):
     Args:
       public_key (:class:`PaillierPublicKey`): The corresponding public
         key.
-      Lambda (int): private secret - see Paillier's paper.
-      mu (int): private secret - see Paillier's paper.
+      p (int): private secret - see Paillier's paper.
+      q (int): private secret - see Paillier's paper.
 
     Attributes:
       public_key (PaillierPublicKey): The corresponding public
         key.
-      Lambda (int): private secret - see Paillier's paper.
-      mu (int): private secret - see Paillier's paper.
+      p (int): private secret - see Paillier's paper.
+      q (int): private secret - see Paillier's paper.
+      psquare (int): p^2
+      qsquare (int): q^2
+      p_inverse (int): p^-1 mod q
+      hp (int): h(p) - see Paillier's paper.
+      hq (int): h(q) - see Paillier's paper.
     """
-    def __init__(self, public_key, Lambda, mu):
+    def __init__(self, public_key, p, q):
+        if not p*q == public_key.n:
+            raise ValueError('given public key does not match the given p and q.')
+        if p == q: #check that p and q are different, otherwise we can't compute p^-1 mod q
+            raise ValueError('p and q have to be different')
         self.public_key = public_key
-        self.Lambda = Lambda
-        self.mu = mu
+        if q < p: #ensure that p < q. 
+            self.p = q
+            self.q = p
+        else:
+            self.p = p
+            self.q = q
+        self.psquare = self.p * self.p
+        
+        self.qsquare = self.q * self.q
+        self.p_inverse = invert(self.p, self.q)
+        self.hp = self.h_function(self.p, self.psquare);
+        self.hq = self.h_function(self.q, self.qsquare);
 
+    @staticmethod
+    def from_totient(public_key, totient):
+        """given the totient, one can factorize the modulus
+        
+        The totient is defined as totient = (p - 1) * (q - 1),
+        and the modulus is defined as modulus = p * q
+        
+        Args:
+          public_key (:class `PaillierPublicKey`): The corresponding public 
+            key
+          totient (int): the totient of the modulus
+          
+        Returns:
+          the PaillierPrivateKey that corresponds to the inputs
+          
+        Raises:
+          ValueError: if the given totient is not the totient of the modulus
+            of the given public key
+        """
+        p_plus_q = public_key.n - totient + 1
+        p_minus_q = isqrt(p_plus_q * p_plus_q - public_key.n * 4)
+        q = (p_plus_q - p_minus_q) // 2
+        p = p_plus_q - q
+        if not p*q == public_key.n:
+            raise ValueError('given public key and totient do not match.')
+        return PaillierPrivateKey(public_key, p, q)
+        
     def __repr__(self):
         pub_repr = repr(self.public_key)
         return "<PaillierPrivateKey for {}>".format(pub_repr)
@@ -300,10 +340,36 @@ class PaillierPrivateKey(object):
             raise TypeError('Expected ciphertext to be an int, not: %s' %
                 type(ciphertext))
 
-        u = powmod(ciphertext, self.Lambda, self.public_key.nsquare)
-        l_of_u = (u - 1) // self.public_key.n
-        return (l_of_u * self.mu) % self.public_key.n
+        decrypt_to_p = self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p) * self.hp % self.p
+        decrypt_to_q = self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q) * self.hq % self.q
+        return self.crt(decrypt_to_p, decrypt_to_q)
+    
+    def h_function(self, x, xsquare):
+        """Computes the h-function as defined in Paillier's paper page 12, 
+        'Decryption using Chinese-remaindering'.
+        """
+        return invert(self.l_function(powmod(self.public_key.g, x - 1, xsquare),x), x)
+            
+    
+    def l_function(self, x, p):
+        """Computes the L function as defined in Paillier's paper. That is: L(x,p) = (x-1)/p"""
+        return (x - 1) // p
+    
+    def crt(self, mp, mq):
+        """The Chinese Remainder Theorem as needed for decryption. Returns the solution modulo n=pq.
+        
+        Args:
+           mp(int): the solution modulo p.
+           mq(int): the solution modulo q.
+       """
+        u = (mq - mp) * self.p_inverse % self.q
+        return mp + (u * self.p)
 
+    def __eq__(self, other):
+        return (self.p == other.p and self.q == other.q)
+
+    def __hash__(self):
+        return hash((self.p, self.q))
 
 class PaillierPrivateKeyring(Mapping):
     """Holds several private keys and can decrypt using any of them.
