@@ -213,14 +213,23 @@ class PaillierPrivateKey(object):
       hq (int): h(q) - see Paillier's paper.
     """
     def __init__(self, public_key, p, q):
+        if not p*q == public_key.n:
+            raise ValueError('given public key does not match the given p and q.')
+        if p == q: #check that p and q are different, otherwise we can't compute p^-1 mod q
+            raise ValueError('p and q have to be different')
         self.public_key = public_key
-        self.p = p
-        self.psquare = p * p
-        self.q = q
-        self.qsquare = q * q
-        self.p_inverse = invert(p, q)
-        self.hp = self.h_function(p, self.psquare);
-        self.hq = self.h_function(q, self.qsquare);
+        if q < p: #ensure that p < q. 
+            self.p = q
+            self.q = p
+        else:
+            self.p = p
+            self.q = q
+        self.psquare = self.p * self.p
+        
+        self.qsquare = self.q * self.q
+        self.p_inverse = invert(self.p, self.q)
+        self.hp = self.h_function(self.p, self.psquare);
+        self.hq = self.h_function(self.q, self.qsquare);
 
     @staticmethod
     def from_totient(public_key, totient):
@@ -332,9 +341,7 @@ class PaillierPrivateKey(object):
                 type(ciphertext))
 
         decrypt_to_p = self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p) * self.hp % self.p
-        print("to_p: {}".format(decrypt_to_p))
         decrypt_to_q = self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q) * self.hq % self.q
-        print("to_q: {}".format(decrypt_to_p))
         return self.crt(decrypt_to_p, decrypt_to_q)
     
     def h_function(self, x, xsquare):
@@ -358,6 +365,11 @@ class PaillierPrivateKey(object):
         u = (mq - mp) * self.p_inverse % self.q
         return mp + (u * self.p)
 
+    def __eq__(self, other):
+        return (self.p == other.p and self.q == other.q)
+
+    def __hash__(self):
+        return hash((self.p, self.q))
 
 class PaillierPrivateKeyring(Mapping):
     """Holds several private keys and can decrypt using any of them.
