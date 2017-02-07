@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Portions Copyright 2012 Google Inc. All Rights Reserved.
 # This file has been modified by NICTA
+from phe.paillier import PaillierPrivateKey, PaillierPublicKey
 
 # This file is part of pyphe.
 #
@@ -61,13 +62,27 @@ class PaillierGeneric(unittest.TestCase):
         repeats = 100
         public_keys = set()
         private_keys = set()
-        for i in range(repeats):
+        for _ in range(repeats):
             public_key, private_key = paillier.generate_paillier_keypair(n_length=256)
             self.assertNotIn(public_key, public_keys, "Managed to generate the same public key")
             self.assertNotIn(private_key, private_keys, "Managed to generate the same private key")
             public_keys.add(public_key)
             private_keys.add(private_key)
 
+    def testStaticPrivateKeyConstructor(self):
+        public_key, private_key = paillier.generate_paillier_keypair()
+        p = private_key.p
+        q = private_key.q
+        private_key_from_static = PaillierPrivateKey.from_totient(public_key, (p-1) * (q-1))
+        c = public_key.encrypt(4242)
+        self.assertEqual(private_key, private_key_from_static, "The private keys should be the same.")
+        self.assertEqual(private_key_from_static.decrypt(c), 4242, "Result of the decryption should be 4242")
+        
+    def testPrivateKeyEquality(self):
+        pk = PaillierPublicKey(2537)
+        p1 = PaillierPrivateKey(pk, 43, 59)
+        p2 = PaillierPrivateKey(pk, 59, 43)
+        self.assertEqual(p1, p2, "These private keys should be equal")
 
 class PaillierTest(unittest.TestCase):
 
