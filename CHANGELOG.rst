@@ -1,3 +1,16 @@
+Version 1.3.0 (2017-02-08)
+=====
+
+Changes to enhance performance. Using Chinese Remainder Theorem for faster
+decryption. Exploit property of the generator to speed up encryption.
+
+Note both the api and the serialisation has changed.
+
+- A private key now has a `p` and `q` attribute instead of `lambda` and `mu`. To
+continue being able to create a private key using the totient use the
+`PaillierPrivateKey.from_totient` static constructor.
+- The serialization and constructor of a public key now only requires `n`.
+
 Version 1.2.3 (2015-06-02)
 =====
 
