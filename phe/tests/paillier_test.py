@@ -110,30 +110,31 @@ class PaillierTestRawEncryption(PaillierTest):
         self.assertEqual(1, self.private_key.raw_decrypt(ciphertext3))
 
     def testRawEncryptDecryptRegression0(self):
-        public_key = paillier.PaillierPublicKey(6497955158, 126869)
+
+        public_key = paillier.PaillierPublicKey(126869)
         private_key = paillier.PaillierPrivateKey(public_key, 293, 433)
 
         ciphertext = public_key.raw_encrypt(10100, 74384)
-        self.assertEqual(848742150, ciphertext)
-        decryption = private_key.raw_decrypt(848742150)
+        self.assertEqual(935906717, ciphertext)
+        decryption = private_key.raw_decrypt(935906717)
         self.assertEqual(10100, decryption)
 
     def testEncryptRegression(self):
-        public_key = paillier.PaillierPublicKey(6497955158, 126869)
+        public_key = paillier.PaillierPublicKey(126869)
 
         enc_num = public_key.encrypt(10100, r_value=74384)
-        self.assertEqual(848742150, enc_num.ciphertext(False))
+        self.assertEqual(935906717, enc_num.ciphertext(False))
 
     def testEncryptIsRandom(self):
         # Check for semantic security
-        public_key = paillier.PaillierPublicKey(6497955158, 126869)
+        public_key = paillier.PaillierPublicKey(126869)
 
         enc_num = public_key.encrypt(1, r_value=1)
-        self.assertEqual(6497955158, enc_num.ciphertext(False))
+        self.assertEqual(126870, enc_num.ciphertext(False))
         # r_value should be random
         enc_num2 = public_key.encrypt(1)
         enc_num3 = public_key.encrypt(1)
-        self.assertNotEqual(6497955158, enc_num2.ciphertext(False))
+        self.assertNotEqual(126870, enc_num2.ciphertext(False))
         self.assertNotEqual(enc_num2.ciphertext(False),
                             enc_num3.ciphertext(False))
 
@@ -621,7 +622,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
         ciphertext1 = self.public_key.encrypt(0, r_value=1)
         # Let's not and say we did
         ciphertext2 = self.public_key.encrypt(20, r_value=1)
-        public_key_2 = paillier.PaillierPublicKey(6497955158, 126869)
+        public_key_2 = paillier.PaillierPublicKey(126869)
         ciphertext2.public_key = public_key_2  # Suuuper dodgy
 
         self.assertRaises(ValueError, ciphertext1.__add__, ciphertext2)

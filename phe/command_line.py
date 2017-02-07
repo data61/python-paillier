@@ -260,7 +260,7 @@ def load_public_key(public_key_data):
     assert public_key_data['kty'] == 'DAJ', error_msg
 
     n = phe.util.base64_to_int(public_key_data['n'])
-    pub = phe.PaillierPublicKey(n+1, n)
+    pub = phe.PaillierPublicKey(n)
     return pub
 
 
