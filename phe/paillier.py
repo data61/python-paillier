@@ -239,12 +239,12 @@ class PaillierPrivateKey(object):
         and the modulus is defined as modulus = p * q
         
         Args:
-          public_key (:class `PaillierPublicKey`): The corresponding public 
+          public_key (PaillierPublicKey): The corresponding public
             key
           totient (int): the totient of the modulus
           
         Returns:
-          the PaillierPrivateKey that corresponds to the inputs
+          the :class:`PaillierPrivateKey` that corresponds to the inputs
           
         Raises:
           ValueError: if the given totient is not the totient of the modulus
