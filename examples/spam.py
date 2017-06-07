@@ -71,7 +71,13 @@ class HomomorphicLogisticRegression(object):
             print("Iter:{} Loss: {:.6f}".format(iter, error / float(n)))
 
     def softmax(self, x):
-        return 1 / (1 + np.exp(-x))
+        # avoiding overflow trick from
+        # http://fa.bianp.net/blog/2013/numerical-optimizers-for-logistic-regression/
+        if x > 0:
+            return 1 / (1 + np.exp(-x))
+        else:
+            exp_t = np.exp(x)
+            return exp_t / (1. + exp_t)
 
     def encrypt(self, pubkey, scaling_factor=1000):
         if (not self.encrypted):
