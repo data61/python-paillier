@@ -62,7 +62,7 @@ expert. The crypto parts are mercifully short, however.
    :target: http://python-paillier.readthedocs.org/en/latest/?badge=stable
    :alt: Documentation Status
 
-.. |coverageM| image:: https://coveralls.io/repos/n1analytics/python-paillier/badge.svg?branch=master&service=github
+.. |coverageM| image:: https://coveralls.io/repos/n1analytics/python-paillier/badge.svg?branch=master
     :target: https://coveralls.io/github/n1analytics/python-paillier?branch=master
   
 
