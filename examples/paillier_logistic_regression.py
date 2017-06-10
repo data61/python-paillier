@@ -5,6 +5,8 @@ https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
 In this example we train a spam classifier with logistic regression. The
 training data is assumed to be known in the clear. After learning, the model
 is encrypted and used for prediction only in this form.
+
+Dependencies: scikit-learn
 """
 
 import phe as paillier
@@ -12,79 +14,99 @@ import numpy as np
 from collections import Counter
 from urllib import request
 import os.path
+import time
+from sklearn.datasets import fetch_20newsgroups
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-np.random.seed(12345)
+seed = 42
+np.random.seed(seed)
 
-# TODO: we should rely on data from an open source data repository
-data_url = 'https://iamtrask.github.io/data/'
-ham_file = 'ham.txt'
-spam_file = 'spam.txt'
 
-def get_data():
+class Timeit():
+
+    def tick(self):
+        self.time0 = time.time()
+
+    def tock(self):
+        if not self.time0:
+            raise Exception('Need to `tick` first!')
+
+        time1 = time.time() - self.time0
+        print('--> elapsed time: %.2f s' % time1)
+
+
+def get_data(cats):
 
     # Getting data the remote
-    if not os.path.isfile(ham_file):
-        print("Downloading", data_url + ham_file)
-        with request.urlopen(data_url + ham_file) as hamdata:
-            with open(ham_file, 'wb') as hamfile:
+    # trainset = fetch_20newsgroups(subset='train', categories=cats, shuffle=True,
+    #                               random_state=seed,
+    #                               remove=('headers', 'footers', 'quotes'))
+    # testset = fetch_20newsgroups(subset='test', categories=cats, shuffle=True,
+    #                              random_state=seed,
+    #                              remove=('headers', 'footers', 'quotes'))
+    #
+    # # Explode sentences
+    # X_train = [doc.strip('\n').split(" ") for doc in trainset.data]
+    # X_test = [doc.strip('\n').split(" ") for doc in testset.data]
+
+    if not os.path.isfile("ham.txt") or not os.path.isfile('spam.txt'):
+        print("Downloading data")
+        with request.urlopen("https://iamtrask.github.io/data/ham.txt") as hamdata:
+            with open("ham.txt", 'wb') as hamfile:
                 hamfile.write(hamdata.read())
-    if not os.path.isfile(spam_file):
-        print("Downloading", data_url + spam_file)
-        with request.urlopen(data_url + spam_file) as spamdata:
-            with open(spam_file, 'wb') as spamfile:
+
+        with request.urlopen("https://iamtrask.github.io/data/spam.txt") as spamdata:
+            with open("spam.txt", 'wb') as spamfile:
                 spamfile.write(spamdata.read())
 
-    # Bring it up from disk
-    print("Importing dataset from disk...")
-    with open(ham_file, 'rb') as f:
-        ham = [row[:-2].split(b" ") for row in f.readlines()]
+    print("Generating paillier keypair")
+    pubkey, prikey = paillier.generate_paillier_keypair(n_length=1024)
 
-    with open(spam_file, 'rb') as f:
+    print("Importing dataset from disk...")
+    with open('spam.txt', 'rb') as f:
         spam = [row[:-2].split(b" ") for row in f.readlines()]
 
-    # Prepare for text processing.
+    with open('ham.txt', 'rb') as f:
+    ham = [row[:-2].split(b" ") for row in f.readlines()]
 
-    return ham, spam
+    # Change label encoding 0,1 -> -1,1
+    y_train, y_test = trainset.target, testset.target
+    y_train[y_train == 0], y_test[y_test == 0] = -1, -1
+
+    # Create vocabulary (real world use case would add a few million
+    # other terms as well from a big internet scrape)
+    word2index = {}
+    i = 0
+    for doc in X_train + X_test:
+        for word in doc:
+            if word not in word2index:
+                word2index[word] = i
+                i += 1
+    # for doc in X_test:
+    #     for word in doc:
+    #         if word not in word2index:
+    #             word2index[word] = i
+    #             i += 1
+
+    return X_train, y_train, X_test, y_test, word2index
 
 
 class LogisticRegression():
-    def __init__(self, positives, negatives, iterations=10, alpha=0.1):
 
+    def __init__(self, pubkey, privkey, word2index, learn_rate=0.001,
+                 verbose=True):
+
+        self.pubkey = pubkey
+        self.pivkey = privkey
+        self.word2index = word2index
+        self.learn_rate = learn_rate
+        self.verbose = verbose
+
+        self.weights = np.zeros(len(word2index))
+        # Flag indicating whether the internal model is encrypted
         self.encrypted = False
-        self.maxweight = 10
 
-        # Create vocabulary (real world use case would add a few million
-        # other terms as well from a big internet scrape)
-        cnts = Counter()
-        for email in (positives + negatives):
-            for word in email:
-                cnts[word] += 1
-
-        # Convert to lookup table
-        vocab = list(cnts.keys())
-        self.word2index = {}
-        for i, word in enumerate(vocab):
-            self.word2index[word] = i
-
-        # Initialize decrypted weights
-        self.weights = (np.random.rand(len(vocab)) - 0.5) * 0.1
-
-        # Train model on unencrypted information
-        self.train(positives, negatives, iterations=iterations, alpha=alpha)
-
-    def train(self, positives, negatives, iterations=10, alpha=0.1):
-
-        for iter in range(iterations):
-            error = 0
-            n = 0
-            for i in range(max(len(positives), len(negatives))):
-                error += np.abs(self.learn(positives[i % len(positives)], 1, alpha))
-                error += np.abs(self.learn(negatives[i % len(negatives)], 0, alpha))
-                n += 2
-
-            print("Iter:{} Loss: {:.6f}".format(iter, error / float(n)))
-
-    def softmax(self, x):
+    def _softmax(self, x):
         # Avoiding overflow trick from
         # http://fa.bianp.net/blog/2013/numerical-optimizers-for-logistic-regression/
         if x > 0:
@@ -93,97 +115,110 @@ class LogisticRegression():
             exp_t = np.exp(x)
             return exp_t / (1. + exp_t)
 
-    # def encrypt(self, pubkey, scaling_factor=1000):
-    def encrypt(self, pubkey):
-        if (not self.encrypted):
-            self.pubkey = pubkey
-            # self.scaling_factor = float(scaling_factor)
-            self.encrypted_weights = list()
+    def _score(self, x):
 
-            for weight in self.weights:
-                # self.encrypted_weights.append(self.pubkey.encrypt(
-                #         int(min(weight, self.maxweight) * self.scaling_factor)))
+        score = 0.0
+        for word in x:
+            score += self.weights[self.word2index[word]]
+            # We should also multiply by the current word-feature, but
+            # that can only be 1 or 0, and we skip 0s
+        return score
 
-                self.encrypted_weights.append(self.pubkey.encrypt(weight))
+    def _encrypted_score(self, x):
 
-                self.encrypted = True
-                self.weights = None
+        score = 0
+        for word in x:
+            score += self.encrypted_weights[self.word2index[word]]
+            # We should also multiply by the current word-feature, but
+            # that can only be 1 or 0, and we skip 0s
+        return score
 
-            return self
+    def fit(self, X, y, iters=10):
 
-    def predict(self, email):
-        if self.encrypted:
-            return self.encrypted_predict(email)
-        else:
-            return self.unencrypted_predict(email)
+        for i in range(iters):
+            for (xi, yi) in zip(X, y):
 
-    def encrypted_predict(self, email):
-        pred = self.pubkey.encrypt(0)
-        for word in email:
-            pred += self.encrypted_weights[self.word2index[word]]
-        return pred
+                grad = self.learn_rate * (self._softmax(-self._score(xi)) - 1.0) * yi
+                for word in xi:
+                    self.weights[self.word2index[word]] -= grad
+                    # We should also multiply by the current word-feature, but
+                    # that can only be 1 or 0, and we skip 0s
 
-    def unencrypted_predict(self, email):
-        pred = 0
-        for word in email:
-            pred += self.weights[self.word2index[word]]
-        pred = self.softmax(pred)
-        return pred
+            if self.verbose:
+                print("Iter: %d" % i)
+                self.evaluate(X_train, y_train)
 
-    def learn(self, email, target, alpha):
-        pred = self.predict(email)
-        delta = (pred - target)  # * pred * (1 - pred)
-        for word in email:
-            self.weights[self.word2index[word]] -= delta * alpha
-        return delta
+        return self
 
-    def evaluate(self):
+    def encrypt(self):
 
-        # Generate encrypted predictions. Then decrypt them and evaluate.
-        fp, tn, tp, fn = .0, .0, .0, .0
+        if not self.encrypted:
+            self.encrypted = True
+            self.encrypted_weights = np.empty_like(self.weights)
 
-        for i, h in enumerate(ham[-1000:]):
-            encrypted_pred = encrypted_model.predict(h)
-            try:
-                # pred = prikey.decrypt(encrypted_pred) / encrypted_model.scaling_factor
-                pred = prikey.decrypt(encrypted_pred)
-                if pred < 0:
-                    tn += 1
-                else:
-                    fp += 1
-            except:
-                print("overflow")
+            for i, weight in enumerate(self.weights):
+                encrypted_weights[i] = self.pubkey.encrypt(weight)
 
+        return self
 
-        for i, h in enumerate(spam[-1000:]):
-            encrypted_pred = encrypted_model.predict(h)
-            try:
-                pred = prikey.decrypt(encrypted_pred)
-                if pred > 0:
-                    tp += 1
-                else:
-                    fn += 1
-            except:
-                print("overflow")
+    def predict(self, X):
 
-        print('Evaluated {:3d} ham and spam emails'.format(tn + tp + fn + fp))
+        out = np.zeros(len(X))
 
-        print("Encrypted Accuracy: {:.2f}%".format(100 * (tn + tp) / float(tn + tp + fn + fp)))
-        print("False Positives: {:.2f}%     <- privacy violation level".format(100 * fp / float(tp + fp)))
-        print("False Negatives: {:.2f}%     <- security risk level".format(100 * fn / float(tn + fn)))
+        for i, doc in enumerate(X):
+            if self.encrypted:
+                out[i] = np.sign(self._encrypted_score(doc).decrypt(out[i]))
+            else:
+                out[i] = np.sign(self._score(doc))
+
+        return out
+
+    def evaluate(self, X, y):
+
+        error = np.mean(self.predict(X) != y)
+
+        if self.verbose:
+            print("Error: %.6f" % error)
+
+        return error
 
 
 if __name__ == '__main__':
 
-    ham, spam = get_data()
-
     print("Generating paillier keypair")
+    # NOTE: using much smaller key sizes wouldn't be safe criptographically
     pubkey, prikey = paillier.generate_paillier_keypair(n_length=1024)
 
+    # Timer util
+    timeit = Timeit()
+
+    print("Getting the data ready")
+    # Only load categories atheism against space
+    cats = ['talk.politics.guns', 'sci.space']
+    X_train, y_train, X_test, y_test, word2index = get_data(cats)
+
+    print("The trainset is composed of %d documents made of %d different words"
+          % (len(X_train), len(word2index)))
+    print("Labels in the trainset are %.2f / %.2f"
+          % (np.mean(y_train == 1), np.mean(y_train == -1)))
+
     print("Learning spam classifier")
-    model = LogisticRegression(spam[0:-1000], ham[0:-1000], iterations=10)
+    model = LogisticRegression(pubkey, prikey, word2index)
+    timeit.tick()
+    model = model.fit(X_train, y_train)
+    timeit.tock()
 
-    print("Encrypting classifier")
-    encrypted_model = model.encrypt(pubkey)
-
-    print("Evaluating with encrypted model")
+    # print("Evaluating with NON-encrypted model")
+    # timeit.tick()
+    # model.evaluate(encrypted=False)
+    # timeit.tock()
+    #
+    # print("Encrypting classifier")
+    # timeit.tick()
+    # model = model.encrypt()
+    # timeit.tock()
+    #
+    # print("Evaluating with encrypted model")
+    # timeit.tick()
+    # model.evaluate(encrypted=True)
+    # timeit.tock()
