@@ -9,7 +9,7 @@ python-paillier  |release|
 |      |reqM|         |
 +---------------------+
 
-A library for Partially Homomorphic Encryption in Python.
+A Python 3 library for Partially Homomorphic Encryption.
 
 The homomorphic properties of the paillier crypto system are:
 

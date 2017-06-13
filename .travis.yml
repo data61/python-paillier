@@ -14,7 +14,7 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "nightly"
+#  - "nightly"
 
 before_install:
   - uname -a
@@ -36,7 +36,7 @@ before_install:
       make;
       sudo make install;
       cd ..;
-      pip install gmpy2==2.0.5;
+      pip install gmpy2==2.0.8;
     fi
   # End install gmpy2 dependencies
   - if [[ $TEST_PYCRYPTO == "true" ]]; then
