@@ -11,15 +11,18 @@ Dependencies: scikit-learn
 
 import phe as paillier
 import numpy as np
-from collections import Counter
-from urllib import request
+from urllib.request import urlopen
 import os.path
 import time
-from sklearn.datasets import fetch_20newsgroups
-from sklearn.feature_extraction.text import TfidfVectorizer
+import tarfile
+import re
 
 seed = 42
 np.random.seed(seed)
+
+# Enron spam dataset #1 urllib
+url1 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron1.tar.gz'
+url2 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron2.tar.gz'
 
 
 class Timeit():
@@ -35,46 +38,68 @@ class Timeit():
         print('--> elapsed time: %.2f s' % time1)
 
 
-def get_data(cats):
+def download_data(cats):
 
-    # Getting data the remote
-    # trainset = fetch_20newsgroups(subset='train', categories=cats, shuffle=True,
-    #                               random_state=seed,
-    #                               remove=('headers', 'footers', 'quotes'))
-    # testset = fetch_20newsgroups(subset='test', categories=cats, shuffle=True,
-    #                              random_state=seed,
-    #                              remove=('headers', 'footers', 'quotes'))
-    #
-    # # Explode sentences
-    # X_train = [doc.strip('\n').split(" ") for doc in trainset.data]
-    # X_test = [doc.strip('\n').split(" ") for doc in testset.data]
+    if (not os.path.isdir('enron1') or not os.path.isdir('enron2')):
 
-    if not os.path.isfile("ham.txt") or not os.path.isfile('spam.txt'):
         print("Downloading data")
-        with request.urlopen("https://iamtrask.github.io/data/ham.txt") as hamdata:
-            with open("ham.txt", 'wb') as hamfile:
-                hamfile.write(hamdata.read())
+        # First folder -> train set
+        foldertar = 'emails.tar.gz'
 
-        with request.urlopen("https://iamtrask.github.io/data/spam.txt") as spamdata:
-            with open("spam.txt", 'wb') as spamfile:
-                spamfile.write(spamdata.read())
+        with urlopen(url1) as remotedata:
+            with open(foldertar, 'wb') as tar:
+                tar.write(remotedata.read())
 
-    print("Generating paillier keypair")
-    pubkey, prikey = paillier.generate_paillier_keypair(n_length=1024)
+        with tarfile.open(foldertar) as tar:
+            tar.extractall()
+        os.remove(foldertar)
+
+        # Second folder -> test set
+        with urlopen(url2) as remotedata:
+            with open(foldertar, 'wb') as tar:
+                tar.write(remotedata.read())
+
+        with tarfile.open(foldertar) as tar:
+            tar.extractall()
+        os.remove(foldertar)
+
+
+def preprocess_data():
 
     print("Importing dataset from disk...")
-    with open('spam.txt', 'rb') as f:
-        spam = [row[:-2].split(b" ") for row in f.readlines()]
+    path = 'enron1/ham/'
+    ham1 = [open(path + f, 'r', errors='replace').read().strip(r"\n").split(" ")
+            for f in os.listdir(path) if os.path.isfile(path + f)]
+    path = 'enron1/spam/'
+    spam1 = [open(path + f, 'r', errors='replace').read().strip(r"\n").split(" ")
+             for f in os.listdir(path) if os.path.isfile(path + f)]
+    path = 'enron2/ham/'
+    ham2 = [open(path + f, 'r', errors='replace').read().strip(r"\n").split(" ")
+            for f in os.listdir(path) if os.path.isfile(path + f)]
+    path = 'enron2/spam/'
+    spam2 = [open(path + f, 'r', errors='replace').read().strip(r"\n").split(" ")
+             for f in os.listdir(path) if os.path.isfile(path + f)]
 
-    with open('ham.txt', 'rb') as f:
-    ham = [row[:-2].split(b" ") for row in f.readlines()]
+    # Build training and test sets
+    X_train = ham1 + spam1
+    y_train = np.array([-1] * len(ham1) + [1] * len(spam1))
+    X_test = ham2 + spam2
+    y_test = np.array([-1] * len(ham2) + [1] * len(spam2))
 
-    # Change label encoding 0,1 -> -1,1
-    y_train, y_test = trainset.target, testset.target
-    y_train[y_train == 0], y_test[y_test == 0] = -1, -1
+    # Remove small alphanumerical string
+    pattern = re.compile('[\D_]+')
+    for i in range(len(X_train)):
+        X_train[i] = [word for word in X_train[i]
+                      if len(pattern.sub('', word)) >= 3]
+    for i in range(len(X_test)):
+        X_test[i] = [word for word in X_test[i]
+                     if len(pattern.sub('', word)) >= 3]
 
-    # Create vocabulary (real world use case would add a few million
-    # other terms as well from a big internet scrape)
+    for w in X_train[:5]:
+        print(w)
+    exit(0)
+
+    # Create vocabulary
     word2index = {}
     i = 0
     for doc in X_train + X_test:
@@ -82,18 +107,13 @@ def get_data(cats):
             if word not in word2index:
                 word2index[word] = i
                 i += 1
-    # for doc in X_test:
-    #     for word in doc:
-    #         if word not in word2index:
-    #             word2index[word] = i
-    #             i += 1
 
     return X_train, y_train, X_test, y_test, word2index
 
 
 class LogisticRegression():
 
-    def __init__(self, pubkey, privkey, word2index, learn_rate=0.001,
+    def __init__(self, pubkey, privkey, word2index, learn_rate=0.01,
                  verbose=True):
 
         self.pubkey = pubkey
@@ -136,17 +156,20 @@ class LogisticRegression():
     def fit(self, X, y, iters=10):
 
         for i in range(iters):
-            for (xi, yi) in zip(X, y):
+            # Scan data at random
+            idx = np.random.permutation(len(X))
+            for j in idx:
 
-                grad = self.learn_rate * (self._softmax(-self._score(xi)) - 1.0) * yi
-                for word in xi:
-                    self.weights[self.word2index[word]] -= grad
+                grad = (self._softmax(-self._score(X[j])) - (y[j] + 1)/2)
+
+                for word in X[j]:
+                    self.weights[self.word2index[word]] -= self.learn_rate * grad
                     # We should also multiply by the current word-feature, but
                     # that can only be 1 or 0, and we skip 0s
 
             if self.verbose:
                 print("Iter: %d" % i)
-                self.evaluate(X_train, y_train)
+                self.evaluate(X, y)
 
         return self
 
@@ -157,7 +180,7 @@ class LogisticRegression():
             self.encrypted_weights = np.empty_like(self.weights)
 
             for i, weight in enumerate(self.weights):
-                encrypted_weights[i] = self.pubkey.encrypt(weight)
+                self.encrypted_weights[i] = self.pubkey.encrypt(weight)
 
         return self
 
@@ -195,7 +218,8 @@ if __name__ == '__main__':
     print("Getting the data ready")
     # Only load categories atheism against space
     cats = ['talk.politics.guns', 'sci.space']
-    X_train, y_train, X_test, y_test, word2index = get_data(cats)
+    download_data(cats)
+    X_train, y_train, X_test, y_test, word2index = preprocess_data()
 
     print("The trainset is composed of %d documents made of %d different words"
           % (len(X_train), len(word2index)))
