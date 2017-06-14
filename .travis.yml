@@ -6,7 +6,7 @@ env:
 # Note travis times out with the following:
 #  - TEST_PYCRYPTO="true" TEST_GMPY="false"
 
-# Inorder to test with and without some libraries, we explicitly
+# In order to test with and without some libraries, we explicitly
 # install deps instead of installing from the requirements file
 
 python:
@@ -14,7 +14,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-#  - "nightly"
 
 before_install:
   - uname -a
