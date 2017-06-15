@@ -52,5 +52,8 @@ before_install:
   - if [ "${USE_WHEEL}" == "1" ]; then pip install wheel; fi
   - if [ "${TEST_PYCRYPTO}" == "1" ]; then pip install pycrypto>=2.6.1; fi
   - travis_retry pip install nose numpy click
+  - python -V
+  - popd
+  - set -o pipefail
 
 script: nosetests -v
