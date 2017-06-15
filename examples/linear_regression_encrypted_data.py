@@ -20,14 +20,9 @@ Dependencies: numpy, sklearn, urllib
 """
 
 import time
-import os.path
-import tarfile
-from urllib.request import urlopen
 
 import numpy as np
 from sklearn.datasets import load_diabetes
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import CountVectorizer
 
 import phe as paillier
 
@@ -52,7 +47,7 @@ def get_data():
     X = diabetes.data
 
     # Add constant to emulate intercept
-    np.c_[X, np.ones(X.shape[0])]
+    X = np.c_[X, np.ones(X.shape[0])]
 
     # The data is already preprocessed
     # Shuffle
@@ -61,7 +56,7 @@ def get_data():
 
     # Split train and test
     split = 100
-    X_train, X_test = X[-split:,], X[:-split,]
+    X_train, X_test = X[-split:, :], X[:-split, :]
     y_train, y_test = y[-split:], y[:-split]
 
     return X_train, y_train, X_test, y_test
@@ -82,7 +77,7 @@ class TimeIt():
 
 
 def mean_square_error(y_pred, y):
-     return 0.5 * np.mean(y - y_pred) ** 2
+    return 0.5 * np.mean((y - y_pred) ** 2)
 
 # class PaillierClassifier():
 #     """Scorer of emails with an encrypted models"""
@@ -156,9 +151,10 @@ def mean_square_error(y_pred, y):
 #     def encrypted_evaluate(self, X):
 #         return self.classifier.encrypted_evaluate(X)
 
+
 class PaillierLinearRegression():
 
-    def __init__(self, n_iter=50, eta=10):
+    def __init__(self, n_iter=60, eta=0.1):
         self.n_iter = n_iter
         self.eta = eta
 
@@ -166,24 +162,24 @@ class PaillierLinearRegression():
         length, dim = X.shape
         weights = np.zeros(dim)
 
-        # rescale labels
-        # self.y_scale = np.max(y)
-        # yy = y / self.y_scale
-
         for _ in range(0, self.n_iter):
             for i in range(0, length):
                 err = weights.dot(X[i, :]) - y[i]
-                weights -= self.eta * err * X[i, :]
-                # for j in range(0, dim):
-                #     weights[j] -= self.eta * err * X[i, j]
+                # weights -= self.eta * err * X[i, :]
+                for j in range(0, dim):
+                    weights[j] -= self.eta * err * X[i, j]
 
             self.weights = weights
-            print('Error %.4f' % mean_square_error(self.predict(X), y))
+            # print('Error %.4f' % mean_square_error(self.predict(X), y))
+
+        # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+        # print(self.weights)
 
         return self
 
     def predict(self, X):
-        return X.dot(self.weights) # * self.y_scale
+        return X.dot(self.weights)
+
 
 if __name__ == '__main__':
 
@@ -192,13 +188,11 @@ if __name__ == '__main__':
     X, y, X_test, y_test = get_data()
 
     print('Baseline: compute mean square error of the mean prediction')
-    print(mean_square_error(np.mean(y), y_test))
+    print("MSE %.2f" % mean_square_error(np.mean(y), y_test))
 
     cl = PaillierLinearRegression()
-    # from sklearn.linear_model import LinearRegression
-    # cl = LinearRegression()
     cl = cl.fit(X, y)
-    print(mean_square_error(cl.predict(X_test), y_test))
+    print("MSE %.2f" % mean_square_error(cl.predict(X_test), y_test))
 
     # print("Generating paillier keypair")
     # alice = Alice()
