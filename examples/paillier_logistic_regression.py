@@ -105,7 +105,7 @@ def preprocess_data():
 
     # Split train and test
     split = 500
-    X_train, X_test = X[-split:, :], X[:-split, :]
+    X_train, X_test = X[-split:,], X[:-split,]
     y_train, y_test = y[-split:], y[:-split]
 
     print("Labels in trainset are %.2f spam / %.2f ham"
@@ -150,66 +150,95 @@ class PaillierClassifier():
         return [self.encrypted_predict(X[i, :]) for i in np.arange(X.shape[0])]
 
 
-# class Alice():
-#     """
-#     Train a model on clear data.
-#     Possess the private key and can encrypt the model for remote usage.
-#     """
-#
-#     def __init__(self):
-#         pass
-#
-#
-# class Bob():
-#     """
-#     Possess the public key and can score data based on encrypted model.
-#     """
-#
-#     def __init__(self):
-#         pass
+class Alice():
+    """
+    Train a model on clear data.
+    Possess the private key and can encrypt the model for remote usage.
+    """
+
+    def __init__(self):
+        self.model = LogisticRegression()
+
+    def generate_paillier_keypair(self, n_length):
+        self.pubkey, self.privkey = \
+            paillier.generate_paillier_keypair(n_length=n_length)
+
+    def get_pubkey(self):
+        return self.pubkey
+
+    def fit(self, X, y):
+        self.model = self.model.fit(X, y)
+
+    def predict(self, X):
+        return self.model.predict(X)
+
+    def encrypt_weights(self):
+        encrypted_weights = []
+        for w in np.nditer(self.model.coef_):
+            encrypted_weights.append(self.pubkey.encrypt(float(w)))
+        encrypted_intercept = self.pubkey.encrypt(self.model.intercept_[0])
+        return encrypted_weights, encrypted_intercept
+
+    def decrypt_scores(self, encrypted_scores):
+        return [self.privkey.decrypt(s) for s in encrypted_scores]
+
+
+class Bob():
+    """
+    Possess the public key and can score data based on encrypted model.
+    """
+
+    def __init__(self, pubkey):
+        self.classifier = PaillierClassifier(pubkey)
+
+    def set_weights(self, weights, intercept):
+        self.classifier.set_weights(weights, intercept)
+
+    def encrypted_predict(self, x):
+        return self.classifier(x)
+
+    def encrypted_evaluate(self, X):
+        return self.classifier.encrypted_evaluate(X)
 
 
 if __name__ == '__main__':
 
+    timer = TimeIt()
+
     download_data()
     X, y, X_test, y_test = preprocess_data()
 
-    timer = TimeIt()
-
     print("Generating paillier keypair")
-    # NOTE: using much smaller key sizes wouldn't be safe criptographically
-    pubkey, prikey = paillier.generate_paillier_keypair(n_length=1024)
+    alice = Alice()
+    # NOTE: using smaller keys sizes wouldn't be criptographically safe
+    alice.generate_paillier_keypair(n_length=1024)
 
     print("\nLearning spam classifier")
     timer.tick()
-    model = LogisticRegression()
-    model = model.fit(X, y)
+    alice.fit(X, y)
     timer.tock()
 
     print("Classify with model in the clear -- what Alice would get having Bob's data locally")
     timer.tick()
-    error = np.mean(model.predict(X_test) != y_test)
+    error = np.mean(alice.predict(X_test) != y_test)
     timer.tock()
     print("Error %.3f" % error)
 
     print("Encrypting classifier")
     timer.tick()
-    encrypted_weights = []
-    for w in np.nditer(model.coef_):
-        encrypted_weights.append(pubkey.encrypt(float(w)))
-    encrypted_intercept = pubkey.encrypt(model.intercept_[0])
+    encrypted_weights, encrypted_intercept = alice.encrypt_weights()
     timer.tock()
 
     print("Scoring with encrypted classifier")
+    bob = Bob(alice.get_pubkey())
+    bob.set_weights(encrypted_weights, encrypted_intercept)
     timer.tick()
-    cl = PaillierClassifier(pubkey)
-    cl.set_weights(encrypted_weights, encrypted_intercept)
-    encrypted_scores = cl.encrypted_evaluate(X_test)
+    encrypted_scores = bob.encrypted_evaluate(X_test)
     timer.tock()
 
     print("Decrypt scores and compute error")
     timer.tick()
-    scores = [prikey.decrypt(s) for s in encrypted_scores]
+    scores = alice.decrypt_scores(encrypted_scores)
     error = np.mean(np.sign(scores) != y_test)
     timer.tock()
     print("Error %.3f" % error)
