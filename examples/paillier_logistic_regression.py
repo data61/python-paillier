@@ -1,10 +1,20 @@
 """
+In this example Alice train a spam classifier on some email dataset she owns.
+She wants to apply it to Bob's personal emails, without
+
+1) asking Bob to send his emails anywhere
+1) leaking information about the learned model or the dataset she has used
+2) letting Bob know which of his e-mails are spam or not.
+
+Alice trains a spam classifier with logistic regression on some data she
+posseses. After learning, generate public and privacy key with a Paillier
+schema. The model is encrypted with the private key. The public key is sent to
+Bob. Bob applies the encrypted model to his own data, obtaining encrypted
+scores for each email. Bob sends them to Alice. Alice decrypts them with the
+public key and computes the error.
+
 Example inspired by @iamtrask blog post:
 https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
-
-In this example we train a spam classifier with logistic regression. The
-training data is assumed to be known in the clear. After learning, the model
-is encrypted and used for prediction only in this form.
 """
 
 import time
