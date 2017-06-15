@@ -143,7 +143,7 @@ class PaillierClassifier():
         score = self.intercept
         _, idx = x.nonzero()
         for i in idx:
-            score += float(x[0, i]) * self.weights[i]
+            score += x[0, i] * self.weights[i]
         return score
 
     def encrypted_evaluate(self, X):
