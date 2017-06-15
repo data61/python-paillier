@@ -15,13 +15,14 @@ public key and computes the error.
 
 Example inspired by @iamtrask blog post:
 https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
+
+Dependencies: numpy, sklearn, urllib
 """
 
 import time
-from urllib import request
-from urllib.request import urlopen
 import os.path
 import tarfile
+from urllib.request import urlopen
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -37,6 +38,7 @@ url2 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron2.tar.gz'
 
 
 def download_data():
+    """Download two sets of Enron1 spam/ham emails if they are not here"""
 
     if (not os.path.isdir('examples/enron1') or
         not os.path.isdir('examples/enron2')):
@@ -65,6 +67,11 @@ def download_data():
 
 
 def preprocess_data():
+    """
+    Get the Enron emails from disk.
+    Represent them as bag-of-words.
+    Shuffle and split train/test.
+    """
 
     print("Importing dataset from disk...")
     path = 'examples/enron1/ham/'
@@ -85,31 +92,30 @@ def preprocess_data():
     y = np.array([-1] * len(ham1) + [1] * len(spam1) +
                  [-1] * len(ham2) + [1] * len(spam2))
 
-    # Words count
-    count_vect = CountVectorizer(decode_error='replace')
+    # Words count, keep only fequent words
+    count_vect = CountVectorizer(decode_error='replace', stop_words='english',
+                                 min_df=0.001)
     X = count_vect.fit_transform(X)
+
+    print('Vocabulary size: %d' % X.shape[1])
 
     # Shuffle
     perm = np.random.permutation(X.shape[0])
     X, y = X[perm, :], y[perm]
 
     # Split train and test
-    X_train, X_test = X[-1000:, :50], X[:-1000, :50]
-    y_train, y_test = y[-1000:], y[:-1000]
+    split = 500
+    X_train, X_test = X[-split:, :], X[:-split, :]
+    y_train, y_test = y[-split:], y[:-split]
+
+    print("Labels in trainset are %.2f spam / %.2f ham"
+           % (np.mean(y_train == 1), np.mean(y_train == -1)))
 
     return X_train, y_train, X_test, y_test
 
-    # Remove small alphanumerical string
-    # pattern = re.compile('[\D_]+')
-    # for i in range(len(X_train)):
-    #     X_train[i] = [word for word in X_train[i]
-    #                   if len(pattern.sub('', word)) >= 3]
-    # for i in range(len(X_test)):
-    #     X_test[i] = [word for word in X_test[i]
-    #                  if len(pattern.sub('', word)) >= 3]
-
 
 class TimeIt():
+    """Helper for measuring runtime"""
 
     def tick(self):
         self.time0 = time.time()
@@ -119,10 +125,11 @@ class TimeIt():
             raise Exception('Need to `tick` first!')
 
         time1 = time.time() - self.time0
-        print('==> elapsed time: %.2f s' % time1)
+        print('[elapsed time: %.2f s]' % time1)
 
 
 class PaillierClassifier():
+    """Scorer of emails with an encrypted models"""
 
     def __init__(self, pubkey):
         self.pubkey = pubkey
@@ -134,9 +141,9 @@ class PaillierClassifier():
     def encrypted_predict(self, x):
 
         score = self.intercept
-        for idx in np.arange(x.shape[1]):
-            if x[0, idx] > 0.0:
-                score += float(x[0, idx]) * self.weights[idx]
+        _, idx = x.nonzero()
+        for i in idx:
+            score += float(x[0, i]) * self.weights[i]
         return score
 
     def encrypted_evaluate(self, X):
@@ -170,9 +177,10 @@ if __name__ == '__main__':
     timer = TimeIt()
 
     print("Generating paillier keypair")
+    # NOTE: using much smaller key sizes wouldn't be safe criptographically
     pubkey, prikey = paillier.generate_paillier_keypair(n_length=1024)
 
-    print("Learning spam classifier")
+    print("\nLearning spam classifier")
     timer.tick()
     model = LogisticRegression()
     model = model.fit(X, y)
@@ -182,7 +190,7 @@ if __name__ == '__main__':
     timer.tick()
     error = np.mean(model.predict(X_test) != y_test)
     timer.tock()
-    print("Error %.4f" % error)
+    print("Error %.3f" % error)
 
     print("Encrypting classifier")
     timer.tick()
@@ -204,4 +212,4 @@ if __name__ == '__main__':
     scores = [prikey.decrypt(s) for s in encrypted_scores]
     error = np.mean(np.sign(scores) != y_test)
     timer.tock()
-    print("Error %.4f" % error)
+    print("Error %.3f" % error)
