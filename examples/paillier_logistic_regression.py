@@ -41,7 +41,7 @@ def download_data():
     """Download two sets of Enron1 spam/ham emails if they are not here"""
 
     if (not os.path.isdir('examples/enron1') or
-        not os.path.isdir('examples/enron2')):
+       not os.path.isdir('examples/enron2')):
 
         print("Downloading 1/2:", url1)
         # First folder -> train set
@@ -105,11 +105,11 @@ def preprocess_data():
 
     # Split train and test
     split = 500
-    X_train, X_test = X[-split:,], X[:-split,]
+    X_train, X_test = X[-split:, :], X[:-split, :]
     y_train, y_test = y[-split:], y[:-split]
 
     print("Labels in trainset are %.2f spam / %.2f ham"
-           % (np.mean(y_train == 1), np.mean(y_train == -1)))
+          % (np.mean(y_train == 1), np.mean(y_train == -1)))
 
     return X_train, y_train, X_test, y_test
 
@@ -218,7 +218,8 @@ if __name__ == '__main__':
     alice.fit(X, y)
     timer.tock()
 
-    print("Classify with model in the clear -- what Alice would get having Bob's data locally")
+    print("Classify with model in the clear -- "
+          "what Alice would get having Bob's data locally")
     timer.tick()
     error = np.mean(alice.predict(X_test) != y_test)
     timer.tock()
