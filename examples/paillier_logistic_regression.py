@@ -8,21 +8,22 @@ She wants to apply it to Bob's personal emails, without
 
 Alice trains a spam classifier with logistic regression on some data she
 posseses. After learning, generate public and privacy key with a Paillier
-schema. The model is encrypted with the private key. The public key is sent to
-Bob. Bob applies the encrypted model to his own data, obtaining encrypted
-scores for each email. Bob sends them to Alice. Alice decrypts them with the
-public key and computes the error.
+schema. The model is encrypted with the private key. The public key and the
+encrypted models are sent to Bob. Bob applies the encrypted model to his own
+data, obtaining encrypted scores for each email. Bob sends them to Alice.
+Alice decrypts them with the public key and computes the error.
 
 Example inspired by @iamtrask blog post:
 https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
 
-Dependencies: numpy, sklearn, urllib
+Dependencies: numpy, sklearn
 """
 
 import time
 import os.path
 import tarfile
 from urllib.request import urlopen
+from contextlib import contextmanager
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -38,32 +39,24 @@ url2 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron2.tar.gz'
 
 
 def download_data():
-    """Download two sets of Enron1 spam/ham emails if they are not here"""
+    """Download two sets of Enron1 spam/ham emails if they are not here
+    We will use the first as trainset and the second as testset."""
 
-    if (not os.path.isdir('examples/enron1') or
-       not os.path.isdir('examples/enron2')):
+    n_datasets = 2
 
-        print("Downloading 1/2:", url1)
-        # First folder -> train set
-        foldertar = 'examples/emails.tar.gz'
+    for d in range(1, n_datasets):
+        if not os.path.isdir('examples/enron%d' % d):
 
-        with urlopen(url1) as remotedata:
-            with open(foldertar, 'wb') as tar:
-                tar.write(remotedata.read())
+            print("Downloading %d/%d:" % (d, n_datasets), url1)
+            foldertar = 'examples/emails.tar.gz'
 
-        with tarfile.open(foldertar) as tar:
-            tar.extractall('examples/')
-        os.remove(foldertar)
+            with urlopen(url1) as remotedata:
+                with open(foldertar, 'wb') as tar:
+                    tar.write(remotedata.read())
 
-        # Second folder -> test set
-        print("Downloading 2/2:", url2)
-        with urlopen(url2) as remotedata:
-            with open(foldertar, 'wb') as tar:
-                tar.write(remotedata.read())
-
-        with tarfile.open(foldertar) as tar:
-            tar.extractall('examples/')
-        os.remove(foldertar)
+            with tarfile.open(foldertar) as tar:
+                tar.extractall('examples/')
+            os.remove(foldertar)
 
 
 def preprocess_data():
@@ -88,14 +81,14 @@ def preprocess_data():
              for f in os.listdir(path) if os.path.isfile(path + f)]
 
     # Merge and create labels
-    X = ham1 + spam1 + ham2 + spam2
+    emails = ham1 + spam1 + ham2 + spam2
     y = np.array([-1] * len(ham1) + [1] * len(spam1) +
                  [-1] * len(ham2) + [1] * len(spam2))
 
     # Words count, keep only fequent words
     count_vect = CountVectorizer(decode_error='replace', stop_words='english',
                                  min_df=0.001)
-    X = count_vect.fit_transform(X)
+    X = count_vect.fit_transform(emails)
 
     print('Vocabulary size: %d' % X.shape[1])
 
@@ -114,32 +107,28 @@ def preprocess_data():
     return X_train, y_train, X_test, y_test
 
 
-class TimeIt():
+@contextmanager
+def timer():
     """Helper for measuring runtime"""
 
-    def tick(self):
-        self.time0 = time.time()
-
-    def tock(self):
-        if not self.time0:
-            raise Exception('Need to `tick` first!')
-
-        time1 = time.time() - self.time0
-        print('[elapsed time: %.2f s]' % time1)
+    time0 = time.perf_counter()
+    yield None
+    print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
 class PaillierClassifier():
-    """Scorer of emails with an encrypted models"""
+    """Scoring with encrypted models"""
 
     def __init__(self, pubkey):
         self.pubkey = pubkey
 
     def set_weights(self, weights, intercept):
-        self.weights = np.array(weights)
+        self.weights = weights
         self.intercept = intercept
 
-    def encrypted_predict(self, x):
-
+    def encrypted_score(self, x):
+        """Compute the score of `x` by multiplying with the encrypted model,
+        which is a vector of `paillier.EncryptedNumber`"""
         score = self.intercept
         _, idx = x.nonzero()
         for i in idx:
@@ -147,13 +136,14 @@ class PaillierClassifier():
         return score
 
     def encrypted_evaluate(self, X):
-        return [self.encrypted_predict(X[i, :]) for i in np.arange(X.shape[0])]
+        return [self.encrypted_score(X[i, :]) for i in range(X.shape[0])]
 
 
 class Alice():
     """
     Train a model on clear data.
-    Possess the private key and can encrypt the model for remote usage.
+    Is the private key holder.
+    Can encrypt the model for remote usage and decrypt encrypted scores.
     """
 
     def __init__(self):
@@ -163,9 +153,6 @@ class Alice():
         self.pubkey, self.privkey = \
             paillier.generate_paillier_keypair(n_length=n_length)
 
-    def get_pubkey(self):
-        return self.pubkey
-
     def fit(self, X, y):
         self.model = self.model.fit(X, y)
 
@@ -173,9 +160,9 @@ class Alice():
         return self.model.predict(X)
 
     def encrypt_weights(self):
-        encrypted_weights = []
-        for w in np.nditer(self.model.coef_):
-            encrypted_weights.append(self.pubkey.encrypt(float(w)))
+        coef = self.model.coef_[0, :]
+        encrypted_weights = [self.pubkey.encrypt(coef[i])
+                             for i in range(coef[i].shape[0])]
         encrypted_intercept = self.pubkey.encrypt(self.model.intercept_[0])
         return encrypted_weights, encrypted_intercept
 
@@ -185,7 +172,8 @@ class Alice():
 
 class Bob():
     """
-    Possess the public key and can score data based on encrypted model.
+    Possess the public key and can score data based on encrypted model, but
+    cannot decrypt the scores without the private key owned by Alice
     """
 
     def __init__(self, pubkey):
@@ -194,52 +182,42 @@ class Bob():
     def set_weights(self, weights, intercept):
         self.classifier.set_weights(weights, intercept)
 
-    def encrypted_predict(self, x):
-        return self.classifier(x)
-
     def encrypted_evaluate(self, X):
         return self.classifier.encrypted_evaluate(X)
 
 
 if __name__ == '__main__':
 
-    timer = TimeIt()
-
     download_data()
     X, y, X_test, y_test = preprocess_data()
 
     print("Generating paillier keypair")
     alice = Alice()
-    # NOTE: using smaller keys sizes wouldn't be criptographically safe
+    # NOTE: using smaller keys sizes wouldn't be cryptographically safe
     alice.generate_paillier_keypair(n_length=1024)
 
     print("\nLearning spam classifier")
-    timer.tick()
-    alice.fit(X, y)
-    timer.tock()
+    with timer() as t:
+        alice.fit(X, y)
 
     print("Classify with model in the clear -- "
           "what Alice would get having Bob's data locally")
-    timer.tick()
-    error = np.mean(alice.predict(X_test) != y_test)
-    timer.tock()
+    with timer() as t:
+        error = np.mean(alice.predict(X_test) != y_test)
     print("Error %.3f" % error)
 
     print("Encrypting classifier")
-    timer.tick()
-    encrypted_weights, encrypted_intercept = alice.encrypt_weights()
-    timer.tock()
+    with timer() as t:
+        encrypted_weights, encrypted_intercept = alice.encrypt_weights()
 
     print("Scoring with encrypted classifier")
-    bob = Bob(alice.get_pubkey())
+    bob = Bob(alice.pubkey)
     bob.set_weights(encrypted_weights, encrypted_intercept)
-    timer.tick()
-    encrypted_scores = bob.encrypted_evaluate(X_test)
-    timer.tock()
+    with timer() as t:
+        encrypted_scores = bob.encrypted_evaluate(X_test)
 
     print("Decrypt scores and compute error")
-    timer.tick()
-    scores = alice.decrypt_scores(encrypted_scores)
-    error = np.mean(np.sign(scores) != y_test)
-    timer.tock()
+    with timer() as t:
+        scores = alice.decrypt_scores(encrypted_scores)
+        error = np.mean(np.sign(scores) != y_test)
     print("Error %.3f" % error)
