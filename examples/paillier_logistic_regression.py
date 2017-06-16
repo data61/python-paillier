@@ -42,27 +42,39 @@ url = [
 
 def download_data():
     """Download two sets of Enron1 spam/ham emails if they are not here
-    We will use the first as trainset and the second as testset."""
+    We will use the first as trainset and the second as testset.
+    Return the path prefix to us to load the data from disk."""
+
+    # The script is meant to work in the main project directory and in the
+    # example directory
+    path_prefix = ''
+    if os.path.isdir('examples'):  # main directory
+        path_prefix = 'examples/'
+    elif os.path.isdir('../examples'):
+        pass
+    else:
+        raise Exception('You are in the wrong path. Move in examples/')
 
     n_datasets = 2
-
     for d in range(1, n_datasets + 1):
-        if not os.path.isdir('examples/enron%d' % d):
+        if not os.path.isdir(os.path.join(path_prefix, 'enron%d' % d)):
 
             URL = url[d-1]
             print("Downloading %d/%d: %s" % (d, n_datasets, URL))
-            folderzip = 'examples/enron%d.zip' % d
+            folderzip = path_prefix + 'enron%d.zip' % d
 
             with urlopen(URL) as remotedata:
                 with open(folderzip, 'wb') as z:
                     z.write(remotedata.read())
 
             with ZipFile(folderzip) as z:
-                z.extractall('examples/')
+                z.extractall(path_prefix)
             os.remove(folderzip)
 
+    return path_prefix
 
-def preprocess_data():
+
+def preprocess_data(path_prefix):
     """
     Get the Enron emails from disk.
     Represent them as bag-of-words.
@@ -70,16 +82,16 @@ def preprocess_data():
     """
 
     print("Importing dataset from disk...")
-    path = 'examples/enron1/ham/'
+    path = path_prefix + 'enron1/ham/'
     ham1 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
             for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = 'examples/enron1/spam/'
+    path = path_prefix + 'enron1/spam/'
     spam1 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
              for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = 'examples/enron2/ham/'
+    path = path_prefix + 'enron2/ham/'
     ham2 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
             for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = 'examples/enron2/spam/'
+    path = path_prefix + 'enron2/spam/'
     spam2 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
              for f in os.listdir(path) if os.path.isfile(path + f)]
 
@@ -165,7 +177,7 @@ class Alice():
     def encrypt_weights(self):
         coef = self.model.coef_[0, :]
         encrypted_weights = [self.pubkey.encrypt(coef[i])
-                             for i in range(coef[i].shape[0])]
+                             for i in range(coef.shape[0])]
         encrypted_intercept = self.pubkey.encrypt(self.model.intercept_[0])
         return encrypted_weights, encrypted_intercept
 
@@ -191,8 +203,7 @@ class Bob():
 
 if __name__ == '__main__':
 
-    download_data()
-    X, y, X_test, y_test = preprocess_data()
+    X, y, X_test, y_test = preprocess_data(download_data())
 
     print("Generating paillier keypair")
     alice = Alice()
