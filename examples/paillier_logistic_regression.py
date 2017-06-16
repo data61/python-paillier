@@ -21,7 +21,7 @@ Dependencies: numpy, sklearn
 
 import time
 import os.path
-import tarfile
+from zipfile import ZipFile
 from urllib.request import urlopen
 from contextlib import contextmanager
 
@@ -33,9 +33,11 @@ import phe as paillier
 
 np.random.seed(42)
 
-# Enron spam dataset
-url1 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron1.tar.gz'
-url2 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron2.tar.gz'
+# Enron spam dataset hosted by https://cloudstor.aarnet.edu.au
+url = [
+    'https://cloudstor.aarnet.edu.au/plus/index.php/s/RpHZ57z2E3BTiSQ/download',
+    'https://cloudstor.aarnet.edu.au/plus/index.php/s/QVD4Xk5Cz3UVYLp/download'
+       ]
 
 
 def download_data():
@@ -44,19 +46,20 @@ def download_data():
 
     n_datasets = 2
 
-    for d in range(1, n_datasets):
+    for d in range(1, n_datasets + 1):
         if not os.path.isdir('examples/enron%d' % d):
 
-            print("Downloading %d/%d:" % (d, n_datasets), url1)
-            foldertar = 'examples/emails.tar.gz'
+            URL = url[d-1]
+            print("Downloading %d/%d: %s" % (d, n_datasets, URL))
+            folderzip = 'examples/enron%d.zip' % d
 
-            with urlopen(url1) as remotedata:
-                with open(foldertar, 'wb') as tar:
-                    tar.write(remotedata.read())
+            with urlopen(URL) as remotedata:
+                with open(folderzip, 'wb') as z:
+                    z.write(remotedata.read())
 
-            with tarfile.open(foldertar) as tar:
-                tar.extractall('examples/')
-            os.remove(foldertar)
+            with ZipFile(folderzip) as z:
+                z.extractall('examples/')
+            os.remove(folderzip)
 
 
 def preprocess_data():
