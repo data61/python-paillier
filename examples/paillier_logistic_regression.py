@@ -37,7 +37,7 @@ np.random.seed(42)
 url = [
     'https://cloudstor.aarnet.edu.au/plus/index.php/s/RpHZ57z2E3BTiSQ/download',
     'https://cloudstor.aarnet.edu.au/plus/index.php/s/QVD4Xk5Cz3UVYLp/download'
-       ]
+]
 
 
 def download_data():
@@ -101,8 +101,7 @@ def preprocess_data(path_prefix):
                  [-1] * len(ham2) + [1] * len(spam2))
 
     # Words count, keep only fequent words
-    count_vect = CountVectorizer(decode_error='replace', stop_words='english',
-                                 min_df=0.001)
+    count_vect = CountVectorizer(decode_error='replace', stop_words='english', min_df=0.001)
     X = count_vect.fit_transform(emails)
 
     print('Vocabulary size: %d' % X.shape[1])
@@ -116,8 +115,8 @@ def preprocess_data(path_prefix):
     X_train, X_test = X[-split:, :], X[:-split, :]
     y_train, y_test = y[-split:], y[:-split]
 
-    print("Labels in trainset are %.2f spam / %.2f ham"
-          % (np.mean(y_train == 1), np.mean(y_train == -1)))
+    print("Labels in trainset are {:.2f} spam : {:.2f} ham".format(
+        np.mean(y_train == 1), np.mean(y_train == -1)))
 
     return X_train, y_train, X_test, y_test
 
@@ -127,11 +126,11 @@ def timer():
     """Helper for measuring runtime"""
 
     time0 = time.perf_counter()
-    yield None
+    yield
     print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
-class PaillierClassifier():
+class PaillierClassifier:
     """Scoring with encrypted models"""
 
     def __init__(self, pubkey):
@@ -154,7 +153,7 @@ class PaillierClassifier():
         return [self.encrypted_score(X[i, :]) for i in range(X.shape[0])]
 
 
-class Alice():
+class Alice:
     """
     Train a model on clear data.
     Is the private key holder.
@@ -185,7 +184,7 @@ class Alice():
         return [self.privkey.decrypt(s) for s in encrypted_scores]
 
 
-class Bob():
+class Bob:
     """
     Possess the public key and can score data based on encrypted model, but
     cannot decrypt the scores without the private key owned by Alice
@@ -210,7 +209,7 @@ if __name__ == '__main__':
     # NOTE: using smaller keys sizes wouldn't be cryptographically safe
     alice.generate_paillier_keypair(n_length=1024)
 
-    print("\nLearning spam classifier")
+    print("Learning spam classifier")
     with timer() as t:
         alice.fit(X, y)
 
@@ -218,7 +217,7 @@ if __name__ == '__main__':
           "what Alice would get having Bob's data locally")
     with timer() as t:
         error = np.mean(alice.predict(X_test) != y_test)
-    print("Error %.3f" % error)
+    print("Error {:.3f}".format(error))
 
     print("Encrypting classifier")
     with timer() as t:
@@ -234,4 +233,4 @@ if __name__ == '__main__':
     with timer() as t:
         scores = alice.decrypt_scores(encrypted_scores)
         error = np.mean(np.sign(scores) != y_test)
-    print("Error %.3f" % error)
+    print("Error {:.3f}".format(error))
