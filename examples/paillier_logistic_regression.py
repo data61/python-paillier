@@ -46,36 +46,24 @@ def download_data():
     We will use the first as trainset and the second as testset.
     Return the path prefix to us to load the data from disk."""
 
-    # The script is meant to work in the main project directory and in the
-    # example directory
-    path_prefix = ''
-    if os.path.isdir('examples'):  # main directory
-        path_prefix = 'examples/'
-    elif os.path.isdir('../examples'):
-        pass
-    else:
-        raise Exception('You are in the wrong path. Move in examples/')
-
     n_datasets = 2
     for d in range(1, n_datasets + 1):
-        if not os.path.isdir(os.path.join(path_prefix, 'enron%d' % d)):
+        if not os.path.isdir('enron%d' % d):
 
             URL = url[d-1]
             print("Downloading %d/%d: %s" % (d, n_datasets, URL))
-            folderzip = path_prefix + 'enron%d.zip' % d
+            folderzip = 'enron%d.zip' % d
 
             with urlopen(URL) as remotedata:
                 with open(folderzip, 'wb') as z:
                     z.write(remotedata.read())
 
             with ZipFile(folderzip) as z:
-                z.extractall(path_prefix)
+                z.extractall()
             os.remove(folderzip)
 
-    return path_prefix
 
-
-def preprocess_data(path_prefix):
+def preprocess_data():
     """
     Get the Enron e-mails from disk.
     Represent them as bag-of-words.
@@ -83,16 +71,16 @@ def preprocess_data(path_prefix):
     """
 
     print("Importing dataset from disk...")
-    path = path_prefix + 'enron1/ham/'
+    path = 'enron1/ham/'
     ham1 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
             for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = path_prefix + 'enron1/spam/'
+    path = 'enron1/spam/'
     spam1 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
              for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = path_prefix + 'enron2/ham/'
+    path = 'enron2/ham/'
     ham2 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
             for f in os.listdir(path) if os.path.isfile(path + f)]
-    path = path_prefix + 'enron2/spam/'
+    path = 'enron2/spam/'
     spam2 = [open(path + f, 'r', errors='replace').read().strip(r"\n")
              for f in os.listdir(path) if os.path.isfile(path + f)]
 
@@ -204,7 +192,8 @@ class Bob:
 
 if __name__ == '__main__':
 
-    X, y, X_test, y_test = preprocess_data(download_data())
+    download_data()
+    X, y, X_test, y_test = preprocess_data()
 
     print("Generating paillier keypair")
     alice = Alice()
