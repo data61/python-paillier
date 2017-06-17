@@ -1,17 +1,18 @@
 """
-In this example Alice train a spam classifier on some email dataset she owns.
-She wants to apply it to Bob's personal emails, without
+In this example Alice trains a spam classifier on some e-mails dataset she owns.
+She wants to apply it to Bob's personal e-mails, without
 
-1) asking Bob to send his emails anywhere
-1) leaking information about the learned model or the dataset she has used
-2) letting Bob know which of his e-mails are spam or not.
+1) asking Bob to send his e-mails anywhere
+2) leaking information about the learned model or the dataset she has learned
+from
+3) letting Bob know which of his e-mails are spam or not.
 
 Alice trains a spam classifier with logistic regression on some data she
-posseses. After learning, generate public and privacy key with a Paillier
-schema. The model is encrypted with the private key. The public key and the
-encrypted models are sent to Bob. Bob applies the encrypted model to his own
-data, obtaining encrypted scores for each email. Bob sends them to Alice.
-Alice decrypts them with the public key and computes the error.
+posseses. After learning, she generates public/private key pair with a Paillier
+schema. The model is encrypted with the public key. The public key and the
+encrypted model are sent to Bob. Bob applies the encrypted model to his own
+data, obtaining encrypted scores for each e-mail. Bob sends them to Alice.
+Alice decrypts them with the private key and computes the classification error.
 
 Example inspired by @iamtrask blog post:
 https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
@@ -41,7 +42,7 @@ url = [
 
 
 def download_data():
-    """Download two sets of Enron1 spam/ham emails if they are not here
+    """Download two sets of Enron1 spam/ham e-mails if they are not here
     We will use the first as trainset and the second as testset.
     Return the path prefix to us to load the data from disk."""
 
@@ -76,7 +77,7 @@ def download_data():
 
 def preprocess_data(path_prefix):
     """
-    Get the Enron emails from disk.
+    Get the Enron e-mails from disk.
     Represent them as bag-of-words.
     Shuffle and split train/test.
     """
