@@ -1,6 +1,6 @@
 """
-In this example Alice trains a spam classifier on some e-mails dataset she owns.
-She wants to apply it to Bob's personal e-mails, without
+In this example Alice trains a spam classifier on some e-mails dataset she
+owns. She wants to apply it to Bob's personal e-mails, without
 
 1) asking Bob to send his e-mails anywhere
 2) leaking information about the learned model or the dataset she has learned
@@ -102,7 +102,8 @@ def preprocess_data(path_prefix):
                  [-1] * len(ham2) + [1] * len(spam2))
 
     # Words count, keep only fequent words
-    count_vect = CountVectorizer(decode_error='replace', stop_words='english', min_df=0.001)
+    count_vect = CountVectorizer(decode_error='replace', stop_words='english',
+                                 min_df=0.001)
     X = count_vect.fit_transform(emails)
 
     print('Vocabulary size: %d' % X.shape[1])
