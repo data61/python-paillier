@@ -20,6 +20,7 @@ Dependencies: numpy, sklearn, urllib
 """
 
 import time
+from contextlib import contextmanager
 
 import numpy as np
 from sklearn.datasets import load_diabetes
@@ -27,10 +28,6 @@ from sklearn.datasets import load_diabetes
 import phe as paillier
 
 np.random.seed(42)
-
-# Enron spam dataset
-url1 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron1.tar.gz'
-url2 = 'http://www.aueb.gr/users/ion/data/enron-spam/preprocessed/enron2.tar.gz'
 
 
 def get_data():
@@ -62,18 +59,13 @@ def get_data():
     return X_train, y_train, X_test, y_test
 
 
-class TimeIt():
+@contextmanager
+def timer():
     """Helper for measuring runtime"""
 
-    def tick(self):
-        self.time0 = time.time()
-
-    def tock(self):
-        if not self.time0:
-            raise Exception('Need to `tick` first!')
-
-        time1 = time.time() - self.time0
-        print('[elapsed time: %.2f s]' % time1)
+    time0 = time.perf_counter()
+    yield None
+print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
 def mean_square_error(y_pred, y):
@@ -152,6 +144,12 @@ def mean_square_error(y_pred, y):
 #         return self.classifier.encrypted_evaluate(X)
 
 
+def encrypt_matrix(X):
+
+    encrypted = []
+    for
+
+
 class PaillierLinearRegression():
 
     def __init__(self, n_iter=60, eta=0.1):
@@ -165,12 +163,11 @@ class PaillierLinearRegression():
         for _ in range(0, self.n_iter):
             for i in range(0, length):
                 err = weights.dot(X[i, :]) - y[i]
-                # weights -= self.eta * err * X[i, :]
                 for j in range(0, dim):
                     weights[j] -= self.eta * err * X[i, j]
 
             self.weights = weights
-            # print('Error %.4f' % mean_square_error(self.predict(X), y))
+            print('Error %.4f' % mean_square_error(self.predict(X), y))
 
         # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
         # print(self.weights)
@@ -192,7 +189,11 @@ if __name__ == '__main__':
 
     cl = PaillierLinearRegression()
     cl = cl.fit(X, y)
-    print("MSE %.2f" % mean_square_error(cl.predict(X_test), y_test))
+    y_pred = cl.predict(X_test)
+    print("MSE %.2f" % mean_square_error(y_pred, y_test))
+    print('For example:')
+    for i in range(5):
+        print('Predicted %d | Ground truth %d' % (y_pred[i], y_test[i]))
 
     # print("Generating paillier keypair")
     # alice = Alice()
