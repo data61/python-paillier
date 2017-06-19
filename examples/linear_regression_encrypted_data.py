@@ -27,22 +27,21 @@ public key and computes the error.
 Dependencies: numpy, sklearn
 """
 
-import time
-from contextlib import contextmanager
+# import time
+# from contextlib import contextmanager
 
 import numpy as np
 from sklearn.datasets import load_diabetes
+from sklearn.linear_model import LinearRegression, Ridge
 
 import phe as paillier
 
-np.random.seed(42)
+np.random.seed(1234)
 
 
-def get_data():
+def get_data(n_clients):
     """
     Download the diabetes dataset, if it is not here.
-    Get the Enron emails from disk.
-    Represent them as bag-of-words.
     Shuffle and split train/test.
     """
 
@@ -59,165 +58,188 @@ def get_data():
     perm = np.random.permutation(X.shape[0])
     X, y = X[perm, :], y[perm]
 
-    # Split train and test
-    split = 100
-    X_train, X_test = X[-split:, :], X[:-split, :]
-    y_train, y_test = y[-split:], y[:-split]
+    # Select test at random
+    split = 200
+    test_idx = np.random.choice(split, X.shape[0])
+    X_test, y_test = X[test_idx, :], y[test_idx]
+    X_train, y_train = X[-test_idx, :], y[-test_idx]
 
-    return X_train, y_train, X_test, y_test
+    # Split train among multiple clients
+    # The selection is not at random. We simulate the fact that each client
+    # sees a potentially very difference sample
+    X, y = [], []
+    l = int(X_train.shape[0] / n_clients)
+    np.random.permutation(X_train.shape[0])
+    X_train, y_perm = X_train[perm, :], y_train[perm]
+    for c in range(n_clients):
+        X.append(X_train[l * c: l * (c + 1), :])
+        y.append(y_train[l * c: l * (c + 1)])
+
+    return X, y, X_test, y_test
 
 
-@contextmanager
-def timer():
-    """Helper for measuring runtime"""
-
-    time0 = time.perf_counter()
-    yield
-    print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
+# @contextmanager
+# def timer():
+#     """Helper for measuring runtime"""
+#
+#     time0 = time.perf_counter()
+#     yield
+#     print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
 def mean_square_error(y_pred, y):
     """
-    1/2 * 1/m * \sum_{i=1..m} (y_pred_i - y_i)^2
+        1/m * \sum_{i=1..m} (y_pred_i - y_i)^2
     """
-    return 0.5 * np.mean((y - y_pred) ** 2)
-
-# class PaillierClassifier():
-#     """Scorer of emails with an encrypted models"""
-#
-#     def __init__(self, pubkey):
-#         self.pubkey = pubkey
-#
-#     def set_weights(self, weights, intercept):
-#         self.weights = np.array(weights)
-#         self.intercept = intercept
-#
-#     def encrypted_predict(self, x):
-#
-#         score = self.intercept
-#         _, idx = x.nonzero()
-#         for i in idx:
-#             score += x[0, i] * self.weights[i]
-#         return score
-#
-#     def encrypted_evaluate(self, X):
-#         return [self.encrypted_predict(X[i, :]) for i in np.arange(X.shape[0])]
-#
-#
-# class Alice():
-#     """
-#     Train a model on clear data.
-#     Possess the private key and can encrypt the model for remote usage.
-#     """
-#
-#     def __init__(self):
-#         self.model = LogisticRegression()
-#
-#     def generate_paillier_keypair(self, n_length):
-#         self.pubkey, self.privkey = \
-#             paillier.generate_paillier_keypair(n_length=n_length)
-#
-#     def get_pubkey(self):
-#         return self.pubkey
-#
-#     def fit(self, X, y):
-#         self.model = self.model.fit(X, y)
-#
-#     def predict(self, X):
-#         return self.model.predict(X)
-#
-#     def encrypt_weights(self):
-#         encrypted_weights = []
-#         for w in np.nditer(self.model.coef_):
-#             encrypted_weights.append(self.pubkey.encrypt(float(w)))
-#         encrypted_intercept = self.pubkey.encrypt(self.model.intercept_[0])
-#         return encrypted_weights, encrypted_intercept
-#
-#     def decrypt_scores(self, encrypted_scores):
-#         return [self.privkey.decrypt(s) for s in encrypted_scores]
-#
-#
-# class Bob():
-#     """
-#     Possess the public key and can score data based on encrypted model.
-#     """
-#
-#     def __init__(self, pubkey):
-#         self.classifier = PaillierClassifier(pubkey)
-#
-#     def set_weights(self, weights, intercept):
-#         self.classifier.set_weights(weights, intercept)
-#
-#     def encrypted_predict(self, x):
-#         return self.classifier(x)
-#
-#     def encrypted_evaluate(self, X):
-#         return self.classifier.encrypted_evaluate(X)
+    return np.mean((y - y_pred) ** 2)
 
 
 def encrypt_vector(pubkey, x):
     return [pubkey.encrypt(x[i]) for i in range(x.shape[0])]
 
 
-def encrypt_matrix(pubkey, X):
-    return [encrypt_vector(pubkey, X[i, :]) for i in range(X.shape[0])]
+def decrypt_vector(privkey, x):
+    return np.array([privkey.decrypt(i) for i in x])
 
 
-class PaillierLinearRegression():
+def sum_encrypted_vectors(x, y):
 
-    def __init__(self, n_iter=60, eta=0.1):
-        self.n_iter = n_iter
-        self.eta = eta
+    if len(x) != len(y):
+        raise Exception('Encrypted vector must have the same size')
+
+    return [x[i] + y[i]  for i in range(len(x))]
+
+
+class Server:
+
+    def __init__(self, n_length=1024):
+        self.pubkey, self.privkey = \
+            paillier.generate_paillier_keypair(n_length=n_length)
+
+    def decrypt_aggregate(self, input_model, n_clients):
+        return decrypt_vector(self.privkey, input_model) / n_clients
+
+
+class Client:
+
+    def __init__(self, name, pubkey):
+        self.name = name
+        self.pubkey = pubkey
+        # self.linreg = LinearRegression()
+        self.linreg = Ridge(random_state=12, alpha=0.1)
 
     def fit(self, X, y):
-        length, dim = X.shape
-        weights = np.zeros(dim)
-
-        for _ in range(self.n_iter):
-            for i in range(length):
-                err = weights.dot(X[i, :]) - y[i]
-                for j in range(dim):
-                    weights[j] -= self.eta * err * X[i, j]
-
-            self.weights = weights
-            print('Error %.4f' % mean_square_error(self.predict(X), y))
-
-        # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
-        # print(self.weights)
-
+        self.linreg = self.linreg.fit(X, y)
         return self
 
-    def fit_encrypted_data(self, X, y):
-        length, dim = len(X), len(X[0])
-        weights = np.zeros(dim)
+    def get_model(self):
+        return np.r_[self.linreg.coef_, self.linreg.intercept_]
 
-        for _ in range(self.n_iter):
-            for i in range(length):
-                err = weights.dot(X[i, :]) - y[i]
-                for j in range(dim):
-                    weights[j] -= self.eta * err * X[i, j]
-
-            self.weights = weights
-            print('Error %.4f' % mean_square_error(self.predict(X), y))
-
-        # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
-        # print(self.weights)
-
-        return self
+    def set_model(self, model):
+        self.linreg.coef_ = model[:-1]
+        self.linreg.intercept = model[-1]
 
     def predict(self, X):
-        return X.dot(self.weights)
+        return self.linreg.predict(X)
+
+    def encrypt_and_aggregate(self, input_model=None):
+
+        this_model = encrypt_vector(self.pubkey, self.get_model())
+
+        if input_model is not None:
+            return sum_encrypted_vectors(input_model, this_model)
+        else:
+            return this_model
+
+
+
+
+# class PaillierLinearRegression():
+#
+#     def __init__(self, n_iter=60, eta=0.1):
+#         self.n_iter = n_iter
+#         self.eta = eta
+#
+#     def fit(self, X, y):
+#         length, dim = X.shape
+#         weights = np.zeros(dim)
+#
+#         for _ in range(self.n_iter):
+#             for i in range(length):
+#                 err = weights.dot(X[i, :]) - y[i]
+#                 for j in range(dim):
+#                     weights[j] -= self.eta * err * X[i, j]
+#
+#             self.weights = weights
+#             print('Error %.4f' % mean_square_error(self.predict(X), y))
+#
+#         # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+#         # print(self.weights)
+#
+#         return self
+#
+#     def fit_encrypted_data(self, X, y):
+#         length, dim = len(X), len(X[0])
+#         weights = np.zeros(dim)
+#
+#         for _ in range(self.n_iter):
+#             for i in range(length):
+#                 err = weights.dot(X[i, :]) - y[i]
+#                 for j in range(dim):
+#                     weights[j] -= self.eta * err * X[i, j]
+#
+#             self.weights = weights
+#             print('Error %.4f' % mean_square_error(self.predict(X), y))
+#
+#         # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+#         # print(self.weights)
+#
+#         return self
+#
+#     def predict(self, X):
+#         return X.dot(self.weights)
 
 
 if __name__ == '__main__':
 
-    X, y, X_test, y_test = get_data()
+    n_clients = 3
+    X, y, X_test, y_test = get_data(n_clients=3)
 
-    pubkey, privkey = paillier.generate_paillier_keypair(n_length=128)
+    # Instantiate the server and generate private and public keys
+    server = Server(n_length=1024)
 
-    encr_X, encr_y = encrypt_matrix(pubkey, X), encrypt_vector(pubkey, y)
+    # Instantiate Alice, Bob and Carol.
+    # Each client gets the public key at creation
+    clients = []
+    clients.append(Client('Alice', server.pubkey))
+    clients.append(Client('Bob', server.pubkey))
+    clients.append(Client('Carol', server.pubkey))
 
-    print(encr_y)
+    # Each client trains a linear regressor on its own data
+    for (i, c) in enumerate(clients):
+        c = c.fit(X[i], y[i])
+        print(c.get_model())
+
+    # Predict
+    for (i, c) in enumerate(clients):
+        # print('train', mean_square_error(c.predict(X[i]), y[i]))
+        print('test', mean_square_error(c.predict(X_test), y_test))
+
+    # Each client sends its own model to the next one, in a RING protocol,
+    # aggregating them all. The last client sends the aggregate model to the server
+    # All those exchanges happen the encrypted domain, so neither any client
+    # sees in the clear the model of anybody else, nor the server reads any
+    # client's individual model.
+    encrypted_aggr = clients[0].encrypt_and_aggregate(input_model=None)
+    encrypted_aggr = clients[1].encrypt_and_aggregate(input_model=encrypted_aggr)
+    encrypted_aggr = clients[2].encrypt_and_aggregate(input_model=encrypted_aggr)
+    aggr = server.decrypt_aggregate(encrypted_aggr, n_clients)
+    print(aggr)
+    for (i, c) in enumerate(clients):
+        c.set_model(aggr)
+        y_pred = c.predict(X_test)
+        print(mean_square_error(y_pred, y_test))
+
 
     # print('Baseline: compute mean square error of the mean prediction')
     # print("MSE %.2f" % mean_square_error(np.mean(y), y_test))
