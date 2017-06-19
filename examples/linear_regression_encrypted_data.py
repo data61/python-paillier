@@ -1,10 +1,21 @@
 """
-In this example Alice train a spam classifier on some email dataset she owns.
-She wants to apply it to Bob's personal emails, without
+In this example Alice owns sensitive data of 442 hospital patients with a
+diabetes condition. Recorded variables are age, sex, body mass index,
+average blood pressure, and six blood serum measurements. A last variable
+describes a quantitative measure of the disease progression.
 
-1) asking Bob to send his emails anywhere
-1) leaking information about the learned model or the dataset she has used
-2) letting Bob know which of his e-mails are spam or not.
+Bob is an external consultant hired with the objecting of turning this data
+into an actionable model for predicting the disease progression. Due to
+the hospital privacy policy:
+
+1) Bob is not allowed to see ANY sensitive variables describing the patients.
+2) Moreover, Alice's data cannot leave the hospital premises, not even in
+encrypted form.
+
+Bob will perform linear regression. Since no data can be given to Bob, we
+implement a protocol from which Bob can requires gradient of the means square
+error
+
 
 Alice trains a spam classifier with logistic regression on some data she
 posseses. After learning, generate public and privacy key with a Paillier
@@ -13,10 +24,7 @@ Bob. Bob applies the encrypted model to his own data, obtaining encrypted
 scores for each email. Bob sends them to Alice. Alice decrypts them with the
 public key and computes the error.
 
-Example inspired by @iamtrask blog post:
-https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
-
-Dependencies: numpy, sklearn, urllib
+Dependencies: numpy, sklearn
 """
 
 import time
@@ -64,11 +72,14 @@ def timer():
     """Helper for measuring runtime"""
 
     time0 = time.perf_counter()
-    yield None
-print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
+    yield
+    print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
 def mean_square_error(y_pred, y):
+    """
+    1/2 * 1/m * \sum_{i=1..m} (y_pred_i - y_i)^2
+    """
     return 0.5 * np.mean((y - y_pred) ** 2)
 
 # class PaillierClassifier():
@@ -144,10 +155,12 @@ def mean_square_error(y_pred, y):
 #         return self.classifier.encrypted_evaluate(X)
 
 
-def encrypt_matrix(X):
+def encrypt_vector(pubkey, x):
+    return [pubkey.encrypt(x[i]) for i in range(x.shape[0])]
 
-    encrypted = []
-    for
+
+def encrypt_matrix(pubkey, X):
+    return [encrypt_vector(pubkey, X[i, :]) for i in range(X.shape[0])]
 
 
 class PaillierLinearRegression():
@@ -160,10 +173,28 @@ class PaillierLinearRegression():
         length, dim = X.shape
         weights = np.zeros(dim)
 
-        for _ in range(0, self.n_iter):
-            for i in range(0, length):
+        for _ in range(self.n_iter):
+            for i in range(length):
                 err = weights.dot(X[i, :]) - y[i]
-                for j in range(0, dim):
+                for j in range(dim):
+                    weights[j] -= self.eta * err * X[i, j]
+
+            self.weights = weights
+            print('Error %.4f' % mean_square_error(self.predict(X), y))
+
+        # self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+        # print(self.weights)
+
+        return self
+
+    def fit_encrypted_data(self, X, y):
+        length, dim = len(X), len(X[0])
+        weights = np.zeros(dim)
+
+        for _ in range(self.n_iter):
+            for i in range(length):
+                err = weights.dot(X[i, :]) - y[i]
+                for j in range(dim):
                     weights[j] -= self.eta * err * X[i, j]
 
             self.weights = weights
@@ -180,20 +211,26 @@ class PaillierLinearRegression():
 
 if __name__ == '__main__':
 
-    timer = TimeIt()
-
     X, y, X_test, y_test = get_data()
 
-    print('Baseline: compute mean square error of the mean prediction')
-    print("MSE %.2f" % mean_square_error(np.mean(y), y_test))
+    pubkey, privkey = paillier.generate_paillier_keypair(n_length=128)
 
-    cl = PaillierLinearRegression()
-    cl = cl.fit(X, y)
-    y_pred = cl.predict(X_test)
-    print("MSE %.2f" % mean_square_error(y_pred, y_test))
-    print('For example:')
-    for i in range(5):
-        print('Predicted %d | Ground truth %d' % (y_pred[i], y_test[i]))
+    encr_X, encr_y = encrypt_matrix(pubkey, X), encrypt_vector(pubkey, y)
+
+    print(encr_y)
+
+    # print('Baseline: compute mean square error of the mean prediction')
+    # print("MSE %.2f" % mean_square_error(np.mean(y), y_test))
+
+    # cl = PaillierLinearRegression()
+    # cl = cl.fit(X, y)
+    # y_pred = cl.predict(X_test)
+    # print("MSE %.2f" % mean_square_error(y_pred, y_test))
+    # print('For example:')
+    # for i in range(5):
+    #     print('Predicted %d | Ground truth %d' % (y_pred[i], y_test[i]))
+
+
 
     # print("Generating paillier keypair")
     # alice = Alice()
