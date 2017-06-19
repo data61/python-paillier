@@ -32,11 +32,12 @@ Dependencies: numpy, sklearn
 
 import numpy as np
 from sklearn.datasets import load_diabetes
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import SGDClassifier
 
 import phe as paillier
 
-np.random.seed(1234)
+seed = 42
+np.random.seed(seed)
 
 
 def get_data(n_clients):
@@ -57,6 +58,10 @@ def get_data(n_clients):
     # Shuffle
     perm = np.random.permutation(X.shape[0])
     X, y = X[perm, :], y[perm]
+
+    # TODO: remove this, change dataset into a classification one
+    y[y < 100] = -1
+    y[y >= 100] = 1
 
     # Select test at random
     split = 200
@@ -112,7 +117,7 @@ def sum_encrypted_vectors(x, y):
 
 class Server:
 
-    def __init__(self, n_length=1024):
+    def __init__(self, key_length=1024):
         self.pubkey, self.privkey = \
             paillier.generate_paillier_keypair(n_length=n_length)
 
@@ -125,15 +130,26 @@ class Client:
     def __init__(self, name, pubkey):
         self.name = name
         self.pubkey = pubkey
-        # self.linreg = LinearRegression()
-        self.linreg = Ridge(random_state=12, alpha=0.1)
+        self.cl = SGDClassifier(random_state=seed)
 
-    def fit(self, X, y):
-        self.linreg = self.linreg.fit(X, y)
+    def fit(self, X, y, n_iter):
+        """Gradient descent for n_iter. Reset the weights."""
+        self.cl = self.cl.fit(X, y)
+
         return self
 
-    def get_model(self):
-        return np.r_[self.linreg.coef_, self.linreg.intercept_]
+    def partial_gradient(self, X, y):
+        """One step of gradient descent. Returns the model update."""
+
+        coef, intercept = self.cl.coef_.copy(), self.cl.intercept_.copy()
+        self.cl.partial_fit(X, y)
+        delta_coef = self.cl.coef_ - coef
+        delta_intercept = self.cl.intercept_ - itnercept
+
+        return np.r_[delta_coef, delta_intercept]
+
+    # def get_model(self):
+    #     return np.r_[self.linreg.coef_, self.linreg.intercept_]
 
     def set_model(self, model):
         self.linreg.coef_ = model[:-1]
@@ -206,7 +222,7 @@ if __name__ == '__main__':
     X, y, X_test, y_test = get_data(n_clients=3)
 
     # Instantiate the server and generate private and public keys
-    server = Server(n_length=1024)
+    server = Server(key_length=1024)
 
     # Instantiate Alice, Bob and Carol.
     # Each client gets the public key at creation
