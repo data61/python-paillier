@@ -3,17 +3,29 @@
 language: python
 sudo: false
 
-# In order to test with and without some libraries, we explicitly
-# install deps instead of installing from the requirements file
+python:
+  - '3.3'
+  - '3.4'
+  - '3.5'
+  - '3.6'
+  - 'nightly'
+
+
+env:
+  - TEST_PYCRYPTO=1
+  - TEST_PYCRYPTO=0
 
 matrix:
+  allow_failures:
+    - python: 'nightly'
   include:
-    - python: 3.3
-    - python: 3.4
-    - python: 3.5
+    - python: '3.5'
       env:
-        - TEST_PYCRYPTO=1
-    - python: 3.6
+        - USE_WHEEL=1
+        - TESTMODE=full
+
+# In order to test with and without some libraries, we explicitly
+# install deps instead of installing from the requirements file
 
 addons:
   apt:
@@ -56,4 +68,7 @@ before_install:
   - popd
   - set -o pipefail
 
-script: nosetests -v
+script:
+  - nosetests -v
+  - if [ "${TESTMODE}" == "full" ]; then coverage run `which nosetests`; coverage report phe/*; fi
+  - if [ "${USE_WHEEL}" == "1" ]; then python setup.py bdist_wheel; fi
