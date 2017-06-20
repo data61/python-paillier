@@ -63,9 +63,6 @@ def get_data(n_clients):
     X_test, y_test = X[test_idx, :], y[test_idx]
     X_train, y_train = X[train_idx, :], y[train_idx]
 
-    print(X_train.shape, X_test.shape)
-    assert X_train.shape[0] + X_test.shape[0] == X.shape[0]
-
     # Split train among multiple clients.
     # The selection is not at random. We simulate the fact that each client.
     # sees a potentially very difference sample of patients.
@@ -115,21 +112,25 @@ class Server:
 
 class Client:
 
-    def __init__(self, name, pubkey):
+    def __init__(self, name, X, y, pubkey):
         self.name = name
         self.pubkey = pubkey
+        self.X = X
+        self.y = y
 
-    def fit(self, X, y, n_iter=10, eta=0.01):
-        """Linear regression for n_iter. Reset the weights."""
+        self.dim = X.shape[1]
+        self.weights = np.zeros(self.dim)
 
-        length, dim = X.shape
-        self.weights = np.zeros(dim)
+    def fit(self, n_iter=10, eta=0.01):
+        """Linear regression for n_iter"""
+
+        length = self.X.shape[0]
 
         for _ in range(n_iter):
             for i in range(length):
-                delta = self.predict(X[i, :]) - y[i]
-                for j in range(dim):
-                    self.weights[j] -= eta * delta * X[i, j]
+                delta = self.predict(self.X[i, :]) - self.y[i]
+                for j in range(self.dim):
+                    self.weights[j] -= eta * delta * self.X[i, j]
 
             # print('Error %.4f' % mean_square_error(self.predict(X), y))
 
@@ -138,13 +139,25 @@ class Client:
 
         return self
 
-    # def compute_gradient(self, X, y):
-    #     """Return the gradient computed at the current model."""
-    #
-    #     delta = weights.dot(X[i, :]) - y[i]
-    #     return delta * X[i, j]
+    def gradient_step(self, gradient, eta=0.01):
+        """Update the model with the given gradient"""
+
+        for j in range(self.dim):
+            self.weights[j] -= eta * gradient[j]
+
+
+    def compute_gradient(self):
+        """Return the gradient computed at the current model on all training set"""
+
+        gradient = np.zeros(self.dim)
+        for i in range(self.X.shape[0]):
+            delta = self.predict(self.X[i, :]) - self.y[i]
+            for j in range(self.dim):
+                gradient += delta * self.X[i, j]
+        return gradient
 
     def predict(self, X):
+        """Score test data"""
         return X.dot(self.weights)
 
     def encrypt_and_aggregate(self, input_model=None):
@@ -156,12 +169,20 @@ class Client:
         else:
             return this_model
 
+    def encrypted_gradient(self, sum_to=None):
 
+        gradient = encrypt_vector(self.pubkey, self.compute_gradient())
+
+        if sum_to is not None:
+            return sum_encrypted_vectors(sum_to, gradient)
+        else:
+            return gradient
 
 
 if __name__ == '__main__':
 
     n_clients = 3
+    names = ['Alice', 'Bob', 'Carol']
     X, y, X_test, y_test = get_data(n_clients=n_clients)
 
     # Instantiate the server and generate private and public keys
@@ -169,55 +190,61 @@ if __name__ == '__main__':
 
     # We need a baseline to understand how good is any future prediction
     print('Compute a baseline: the mean of all training data')
-    print('Baseline at test time:', mean_square_error(np.mean(y[0]), y_test))
+    for i in range(n_clients):
+        print('Baseline at test time:', mean_square_error(np.mean(y[i]), y_test))
 
     # Instantiate Alice, Bob and Carol.
     # Each client gets the public key at creation
     clients = []
-    clients.append(Client('Alice', server.pubkey))
-    clients.append(Client('Bob', server.pubkey))
-    clients.append(Client('Carol', server.pubkey))
+    for i in range(n_clients):
+        clients.append(Client(names[i], X[i], y[i], server.pubkey))
 
     # Each client trains a linear regressor on its own data
-    for (i, c) in enumerate(clients):
-        c = c.fit(X[i], y[i], n_iter=50, eta=0.05)
-        print(c.weights)
-
-    # Predict
-    for (i, c) in enumerate(clients):
-        print('Train', mean_square_error(c.predict(X[i]), y[i]))
-        print('Test', mean_square_error(c.predict(X_test), y_test))
+    # for (i, c) in enumerate(clients):
+    #     c = c.fit(n_iter=50, eta=0.05)
+    #     print(c.weights)
+    #
+    # # Predict
+    # for (i, c) in enumerate(clients):
+    #     print('Train', mean_square_error(c.predict(X[i]), y[i]))
+    #     print('Test', mean_square_error(c.predict(X_test), y_test))
 
     # Each client sends its own model to the next one, in a RING protocol,
     # aggregating them all. The last client sends the aggregate model to the server
     # All those exchanges happen the encrypted domain, so neither any client
     # sees in the clear the model of anybody else, nor the server reads any
     # client's individual model.
-    encrypted_aggr = clients[0].encrypt_and_aggregate(input_model=None)
-    encrypted_aggr = clients[1].encrypt_and_aggregate(input_model=encrypted_aggr)
-    encrypted_aggr = clients[2].encrypt_and_aggregate(input_model=encrypted_aggr)
-    aggr = server.decrypt_aggregate(encrypted_aggr, n_clients)
-    print(aggr)
+    # encrypted_aggr = clients[0].encrypt_and_aggregate(input_model=None)
+    # encrypted_aggr = clients[1].encrypt_and_aggregate(input_model=encrypted_aggr)
+    # encrypted_aggr = clients[2].encrypt_and_aggregate(input_model=encrypted_aggr)
+    # aggr = server.decrypt_aggregate(encrypted_aggr, n_clients)
+    # print(aggr)
+    # for (i, c) in enumerate(clients):
+    #     c.weights = aggr
+    #     y_pred = c.predict(X_test)
+    #     print(mean_square_error(y_pred, y_test))
+
+    # The federated learning with gradient from the google paper
+    n_iter = 5
+    for i in range(n_iter):
+
+        # Compute gradients, encrypt and aggregate
+        encrypt_aggr = clients[0].encrypted_gradient(sum_to=None)
+        encrypt_aggr = clients[1].encrypted_gradient(sum_to=encrypt_aggr)
+        encrypt_aggr = clients[2].encrypted_gradient(sum_to=encrypt_aggr)
+
+        # Send aggregate to server, which decrypts
+        aggr = server.decrypt_aggregate(encrypt_aggr, n_clients)
+
+        # Take gradient steps
+        clients[0].gradient_step(aggr)
+        clients[1].gradient_step(aggr)
+        clients[2].gradient_step(aggr)
+
     for (i, c) in enumerate(clients):
-        c.weights = aggr
+        y_pred = c.predict(c.X)
+        print(mean_square_error(y_pred, c.y))
+
+    for (i, c) in enumerate(clients):
         y_pred = c.predict(X_test)
         print(mean_square_error(y_pred, y_test))
-
-
-
-
-
-    #
-    # print("Scoring with encrypted classifier")
-    # bob = Bob(alice.get_pubkey())
-    # bob.set_weights(encrypted_weights, encrypted_intercept)
-    # timer.tick()
-    # encrypted_scores = bob.encrypted_evaluate(X_test)
-    # timer.tock()
-    #
-    # print("Decrypt scores and compute error")
-    # timer.tick()
-    # scores = alice.decrypt_scores(encrypted_scores)
-    # error = np.mean(np.sign(scores) != y_test)
-    # timer.tock()
-    # print("Error %.3f" % error)
