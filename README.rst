@@ -6,12 +6,10 @@ python-paillier  |release|
 +---------------------+
 |      |rtdM|         |
 +---------------------+
-|      |coverageM|    |
-+---------------------+
 |      |reqM|         |
 +---------------------+
 
-A library for Partially Homomorphic Encryption in Python.
+A Python 3 library for Partially Homomorphic Encryption.
 
 The homomorphic properties of the paillier crypto system are:
 
@@ -61,8 +59,4 @@ expert. The crypto parts are mercifully short, however.
 .. |rtdM| image:: https://readthedocs.org/projects/python-paillier/badge/?version=stable
    :target: http://python-paillier.readthedocs.org/en/latest/?badge=stable
    :alt: Documentation Status
-
-.. |coverageM| image:: https://coveralls.io/repos/n1analytics/python-paillier/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/n1analytics/python-paillier?branch=master
-  
 
