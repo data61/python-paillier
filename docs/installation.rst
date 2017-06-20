@@ -19,6 +19,10 @@ To also install the :ref:`command line utility <cli>`, introduced at version 1.2
 
     pip install "phe[cli]>1.2"
 
+Examples have been written which have their own additional requirements such as sklearn.
+To also install those::
+
+    pip install "phe[cli,examples]"
 
 
 Manual installation

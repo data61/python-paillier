@@ -57,7 +57,8 @@ setup(
         ],
     },
     extras_require={
-        'cli': ['click']
+        'cli': ['click'],
+        'examples': ['sklearn']
     },
     install_requires=['gmpy2'],
     tests_require=['numpy', 'click'],
