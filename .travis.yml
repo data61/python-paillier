@@ -63,12 +63,12 @@ before_install:
   - travis_retry pip install -U pip setuptools
   - if [ "${USE_WHEEL}" == "1" ]; then pip install wheel; fi
   - if [ "${TEST_PYCRYPTO}" == "1" ]; then pip install pycrypto>=2.6.1; fi
-  - travis_retry pip install nose numpy click
+  - travis_retry pip install nose numpy click nose-timer
   - python -V
   - popd
   - set -o pipefail
 
 script:
-  - nosetests -v
+  - nosetests -v --with-timer
   - if [ "${TESTMODE}" == "full" ]; then coverage run `which nosetests`; coverage report phe/*; fi
   - if [ "${USE_WHEEL}" == "1" ]; then python setup.py bdist_wheel; fi
