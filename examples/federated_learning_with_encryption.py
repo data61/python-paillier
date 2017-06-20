@@ -13,6 +13,9 @@ the hospital privacy policy:
 encrypted form.
 
 
+Inspired by Google's work on secure protocol for federated learning
+https://research.googleblog.com/2017/04/federated-learning-collaborative.html
+
 Dependencies: numpy, sklearn
 """
 
