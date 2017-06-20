@@ -69,6 +69,6 @@ before_install:
   - set -o pipefail
 
 script:
-  - nosetests -v --with-timer
+  - nosetests -v --with-timer --timer-top-n 10
   - if [ "${TESTMODE}" == "full" ]; then coverage run `which nosetests`; coverage report phe/*; fi
   - if [ "${USE_WHEEL}" == "1" ]; then python setup.py bdist_wheel; fi
