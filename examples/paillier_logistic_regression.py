@@ -12,7 +12,8 @@ posseses. After learning, she generates public/private key pair with a Paillier
 schema. The model is encrypted with the public key. The public key and the
 encrypted model are sent to Bob. Bob applies the encrypted model to his own
 data, obtaining encrypted scores for each e-mail. Bob sends them to Alice.
-Alice decrypts them with the private key and computes the classification error.
+Alice decrypts them with the private key to obtain the predictions spam vs. not
+spam.
 
 Example inspired by @iamtrask blog post:
 https://iamtrask.github.io/2017/06/05/homomorphic-surveillance/
@@ -220,7 +221,7 @@ if __name__ == '__main__':
     with timer() as t:
         encrypted_scores = bob.encrypted_evaluate(X_test)
 
-    print("Decrypt scores and compute error")
+    print("Decrypt scores")
     with timer() as t:
         scores = alice.decrypt_scores(encrypted_scores)
         error = np.mean(np.sign(scores) != y_test)

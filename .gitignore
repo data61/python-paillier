@@ -105,5 +105,5 @@ crashlytics.properties
 crashlytics-build.properties
 
 # Data folders downloaded for examples
-examples/enron1
-examples/enron2
+*enron1
+*enron2
