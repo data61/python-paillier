@@ -27,12 +27,8 @@ public key and computes the error.
 Dependencies: numpy, sklearn
 """
 
-# import time
-# from contextlib import contextmanager
-
 import numpy as np
 from sklearn.datasets import load_diabetes
-from sklearn.linear_model import SGDClassifier
 
 import phe as paillier
 
@@ -42,7 +38,7 @@ np.random.seed(seed)
 
 def get_data(n_clients):
     """
-    Download the diabetes dataset, if it is not here.
+    Import the download dataset via sklearn.
     Shuffle and split train/test.
     """
 
@@ -59,19 +55,15 @@ def get_data(n_clients):
     perm = np.random.permutation(X.shape[0])
     X, y = X[perm, :], y[perm]
 
-    # TODO: remove this, change dataset into a classification one
-    y[y < 100] = -1
-    y[y >= 100] = 1
-
     # Select test at random
-    split = 200
+    split = 100
     test_idx = np.random.choice(split, X.shape[0])
     X_test, y_test = X[test_idx, :], y[test_idx]
     X_train, y_train = X[-test_idx, :], y[-test_idx]
 
-    # Split train among multiple clients
-    # The selection is not at random. We simulate the fact that each client
-    # sees a potentially very difference sample
+    # Split train among multiple clients.
+    # The selection is not at random. We simulate the fact that each client.
+    # sees a potentially very difference sample of patients.
     X, y = [], []
     l = int(X_train.shape[0] / n_clients)
     np.random.permutation(X_train.shape[0])
@@ -81,15 +73,6 @@ def get_data(n_clients):
         y.append(y_train[l * c: l * (c + 1)])
 
     return X, y, X_test, y_test
-
-
-# @contextmanager
-# def timer():
-#     """Helper for measuring runtime"""
-#
-#     time0 = time.perf_counter()
-#     yield
-#     print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
 def mean_square_error(y_pred, y):
@@ -110,7 +93,7 @@ def decrypt_vector(privkey, x):
 def sum_encrypted_vectors(x, y):
 
     if len(x) != len(y):
-        raise Exception('Encrypted vector must have the same size')
+        raise Exception('Encrypted vectors must have the same size')
 
     return [x[i] + y[i]  for i in range(len(x))]
 
@@ -119,7 +102,7 @@ class Server:
 
     def __init__(self, key_length=1024):
         self.pubkey, self.privkey = \
-            paillier.generate_paillier_keypair(n_length=n_length)
+            paillier.generate_paillier_keypair(n_length=key_length)
 
     def decrypt_aggregate(self, input_model, n_clients):
         return decrypt_vector(self.privkey, input_model) / n_clients
@@ -130,42 +113,43 @@ class Client:
     def __init__(self, name, pubkey):
         self.name = name
         self.pubkey = pubkey
-        self.cl = SGDClassifier(random_state=seed)
 
-    def fit(self, X, y, n_iter):
-        """Gradient descent for n_iter. Reset the weights."""
-        self.cl = self.cl.fit(X, y)
+    def fit(self, X, y, n_iter=10, eta=0.01):
+        """Linear regression for n_iter. Reset the weights."""
+
+        length, dim = X.shape
+        # self.weights = np.zeros(dim)
+        #
+        # for _ in range(n_iter):
+        #     for i in range(length):
+        #         delta = self.predict(X[i, :]) - y[i]
+        #         for j in range(dim):
+        #             self.weights[j] -= eta * delta * X[i, j]
+        #
+        #     print('Error %.4f' % mean_square_error(self.predict(X), y))
+
+        self.weights = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+        # print(self.weights)
 
         return self
 
-    def partial_gradient(self, X, y):
-        """One step of gradient descent. Returns the model update."""
-
-        coef, intercept = self.cl.coef_.copy(), self.cl.intercept_.copy()
-        self.cl.partial_fit(X, y)
-        delta_coef = self.cl.coef_ - coef
-        delta_intercept = self.cl.intercept_ - itnercept
-
-        return np.r_[delta_coef, delta_intercept]
-
-    # def get_model(self):
-    #     return np.r_[self.linreg.coef_, self.linreg.intercept_]
-
-    def set_model(self, model):
-        self.linreg.coef_ = model[:-1]
-        self.linreg.intercept = model[-1]
+    # def compute_gradient(self, X, y):
+    #     """Return the gradient computed at the current model."""
+    #
+    #     delta = weights.dot(X[i, :]) - y[i]
+    #     return delta * X[i, j]
 
     def predict(self, X):
-        return self.linreg.predict(X)
-
-    def encrypt_and_aggregate(self, input_model=None):
-
-        this_model = encrypt_vector(self.pubkey, self.get_model())
-
-        if input_model is not None:
-            return sum_encrypted_vectors(input_model, this_model)
-        else:
-            return this_model
+        return X.dot(self.weights)
+    #
+    # def encrypt_and_aggregate(self, input_model=None):
+    #
+    #     this_model = encrypt_vector(self.pubkey, self.get_model())
+    #
+    #     if input_model is not None:
+    #         return sum_encrypted_vectors(input_model, this_model)
+    #     else:
+    #         return this_model
 
 
 
@@ -219,10 +203,14 @@ class Client:
 if __name__ == '__main__':
 
     n_clients = 3
-    X, y, X_test, y_test = get_data(n_clients=3)
+    X, y, X_test, y_test = get_data(n_clients=1)
 
     # Instantiate the server and generate private and public keys
     server = Server(key_length=1024)
+
+    # We need a baseline to understand how good is any future prediction
+    print('Compute a baseline: the mean of all training data')
+    print('Baseline at test time:', mean_square_error(np.mean(y[0]), y_test))
 
     # Instantiate Alice, Bob and Carol.
     # Each client gets the public key at creation
@@ -231,30 +219,35 @@ if __name__ == '__main__':
     clients.append(Client('Bob', server.pubkey))
     clients.append(Client('Carol', server.pubkey))
 
-    # Each client trains a linear regressor on its own data
-    for (i, c) in enumerate(clients):
-        c = c.fit(X[i], y[i])
-        print(c.get_model())
+    c = clients[0]
+    c.fit(X[0], y[0], n_iter=60, eta=0.1)
+    print('Train', mean_square_error(c.predict(X[0]), y[0]))
+    print('Test', mean_square_error(c.predict(X_test), y_test))
 
-    # Predict
-    for (i, c) in enumerate(clients):
-        # print('train', mean_square_error(c.predict(X[i]), y[i]))
-        print('test', mean_square_error(c.predict(X_test), y_test))
+    # Each client trains a linear regressor on its own data
+    # for (i, c) in enumerate(clients):
+    #     c = c.fit(X[i], y[i], n_iter=50, eta=0.05)
+    #     print(c.weights)
+    #
+    # # Predict
+    # for (i, c) in enumerate(clients):
+    #     print('Train', mean_square_error(c.predict(X[i]), y[i]))
+    #     print('Test', mean_square_error(c.predict(X_test), y_test))
 
     # Each client sends its own model to the next one, in a RING protocol,
     # aggregating them all. The last client sends the aggregate model to the server
     # All those exchanges happen the encrypted domain, so neither any client
     # sees in the clear the model of anybody else, nor the server reads any
     # client's individual model.
-    encrypted_aggr = clients[0].encrypt_and_aggregate(input_model=None)
-    encrypted_aggr = clients[1].encrypt_and_aggregate(input_model=encrypted_aggr)
-    encrypted_aggr = clients[2].encrypt_and_aggregate(input_model=encrypted_aggr)
-    aggr = server.decrypt_aggregate(encrypted_aggr, n_clients)
-    print(aggr)
-    for (i, c) in enumerate(clients):
-        c.set_model(aggr)
-        y_pred = c.predict(X_test)
-        print(mean_square_error(y_pred, y_test))
+    # encrypted_aggr = clients[0].encrypt_and_aggregate(input_model=None)
+    # encrypted_aggr = clients[1].encrypt_and_aggregate(input_model=encrypted_aggr)
+    # encrypted_aggr = clients[2].encrypt_and_aggregate(input_model=encrypted_aggr)
+    # aggr = server.decrypt_aggregate(encrypted_aggr, n_clients)
+    # print(aggr)
+    # for (i, c) in enumerate(clients):
+    #     c.set_model(aggr)
+    #     y_pred = c.predict(X_test)
+    #     print(mean_square_error(y_pred, y_test))
 
 
     # print('Baseline: compute mean square error of the mean prediction')
@@ -270,26 +263,7 @@ if __name__ == '__main__':
 
 
 
-    # print("Generating paillier keypair")
-    # alice = Alice()
-    # # NOTE: using smaller keys sizes wouldn't be criptographically safe
-    # alice.generate_paillier_keypair(n_length=1024)
-    #
-    # print("\nLearning spam classifier")
-    # timer.tick()
-    # alice.fit(X, y)
-    # timer.tock()
-    #
-    # print("Classify with model in the clear -- what Alice would get having Bob's data locally")
-    # timer.tick()
-    # error = np.mean(alice.predict(X_test) != y_test)
-    # timer.tock()
-    # print("Error %.3f" % error)
-    #
-    # print("Encrypting classifier")
-    # timer.tick()
-    # encrypted_weights, encrypted_intercept = alice.encrypt_weights()
-    # timer.tock()
+
     #
     # print("Scoring with encrypted classifier")
     # bob = Bob(alice.get_pubkey())
