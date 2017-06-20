@@ -8,7 +8,7 @@ from
 3) letting Bob know which of his e-mails are spam or not.
 
 Alice trains a spam classifier with logistic regression on some data she
-posseses. After learning, she generates public/private key pair with a Paillier
+possesses. After learning, she generates public/private key pair with a Paillier
 schema. The model is encrypted with the public key. The public key and the
 encrypted model are sent to Bob. Bob applies the encrypted model to his own
 data, obtaining encrypted scores for each e-mail. Bob sends them to Alice.
@@ -90,7 +90,7 @@ def preprocess_data():
     y = np.array([-1] * len(ham1) + [1] * len(spam1) +
                  [-1] * len(ham2) + [1] * len(spam2))
 
-    # Words count, keep only fequent words
+    # Words count, keep only frequent words
     count_vect = CountVectorizer(decode_error='replace', stop_words='english',
                                  min_df=0.001)
     X = count_vect.fit_transform(emails)
@@ -196,12 +196,12 @@ if __name__ == '__main__':
     download_data()
     X, y, X_test, y_test = preprocess_data()
 
-    print("Generating paillier keypair")
+    print("Alice: Generating paillier keypair")
     alice = Alice()
     # NOTE: using smaller keys sizes wouldn't be cryptographically safe
     alice.generate_paillier_keypair(n_length=1024)
 
-    print("Learning spam classifier")
+    print("Alice: Learning spam classifier")
     with timer() as t:
         alice.fit(X, y)
 
@@ -211,18 +211,19 @@ if __name__ == '__main__':
         error = np.mean(alice.predict(X_test) != y_test)
     print("Error {:.3f}".format(error))
 
-    print("Encrypting classifier")
+    print("Alice: Encrypting classifier")
     with timer() as t:
         encrypted_weights, encrypted_intercept = alice.encrypt_weights()
 
-    print("Scoring with encrypted classifier")
+    print("Bob: Scoring with encrypted classifier")
     bob = Bob(alice.pubkey)
     bob.set_weights(encrypted_weights, encrypted_intercept)
     with timer() as t:
         encrypted_scores = bob.encrypted_evaluate(X_test)
 
-    print("Decrypt scores")
+    print("Alice: Decrypting scores")
     with timer() as t:
         scores = alice.decrypt_scores(encrypted_scores)
-        error = np.mean(np.sign(scores) != y_test)
-    print("Error {:.3f}".format(error))
+    error = np.mean(np.sign(scores) != y_test)
+    print("Error {:.3f} -- this is not know to Alice, which does not possess "
+          "the ground truth labels".format(error))
