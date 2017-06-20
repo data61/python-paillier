@@ -146,9 +146,9 @@ class PaillierClassifier:
 
 class Alice:
     """
-    Train a model on clear data.
-    Is the private key holder.
-    Can encrypt the model for remote usage and decrypt encrypted scores.
+    Trains a Logistic Regression model on plaintext data,
+    encrypts the model for remote use,
+    decrypts encrypted scores using the paillier private key.
     """
 
     def __init__(self):
@@ -177,8 +177,10 @@ class Alice:
 
 class Bob:
     """
-    Possess the public key and can score data based on encrypted model, but
-    cannot decrypt the scores without the private key owned by Alice
+    Is given the encrypted model and the public key.
+
+    Scores local plaintext data with the encrypted model, but cannot decrypt
+    the scores without the private key held by Alice.
     """
 
     def __init__(self, pubkey):
@@ -221,9 +223,9 @@ if __name__ == '__main__':
     with timer() as t:
         encrypted_scores = bob.encrypted_evaluate(X_test)
 
-    print("Alice: Decrypting scores")
+    print("Alice: Decrypting Bob's scores")
     with timer() as t:
         scores = alice.decrypt_scores(encrypted_scores)
     error = np.mean(np.sign(scores) != y_test)
-    print("Error {:.3f} -- this is not know to Alice, which does not possess "
+    print("Error {:.3f} -- this is not known to Alice, who does not possess "
           "the ground truth labels".format(error))
