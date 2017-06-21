@@ -65,7 +65,7 @@ def get_data(n_clients):
     Return a `n-clients`-size list of train set and one test set
     """
 
-    print("Download data")
+    print("Downloading data")
     diabetes = load_diabetes()
     y = diabetes.target
     X = diabetes.data
@@ -183,6 +183,9 @@ class Client:
 
 if __name__ == '__main__':
 
+    # Learning params
+    n_iter, eta = 20, 0.01
+
     names = ['Hospital 1', 'Hospital 2', 'Hospital 3']
     n_clients = len(names)
 
@@ -192,11 +195,11 @@ if __name__ == '__main__':
     server = Server(key_length=1024)
 
     # We need a baseline to understand how good is any future prediction
-    print('Compute a baseline: the mean of all training data')
-    for i in range(n_clients):
-        print('Baseline at test time:', mean_square_error(np.mean(y[i]), y_test))
+    # print('Compute a baseline: the mean of all training data')
+    # for i in range(n_clients):
+    #     print('Baseline at test time:', mean_square_error(np.mean(y[i]), y_test))
 
-    # Instantiate Alice, Bob and Carol.
+    # Instantiate the clients.
     # Each client gets the public key at creation and its own local dataset
     clients = []
     for i in range(n_clients):
@@ -206,21 +209,11 @@ if __name__ == '__main__':
     print('What is the error (MSE) that each client would get on test set by '
           'training only on its own local data?')
     for c in clients:
-        c.fit(n_iter=10)
+        c.fit(n_iter, eta)
         y_pred = c.predict(X_test)
         print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred, y_test)))
 
-
-    # Each client sends its own model to the next one, in a RING protocol,
-    # aggregating them all. The last client sends the aggregate model to the server
-    # All those exchanges happen the encrypted domain, so neither any client
-    # sees in the clear the model of anybody else, nor the server reads any
-    # client's individual model.
-
-
     # The federated learning with gradient descent
-    n_iter = 20
-    eta = 0.01
     print('Running distributed gradient aggregation for {:d} iterations'
           .format(n_iter))
     for i in range(n_iter):
@@ -237,11 +230,7 @@ if __name__ == '__main__':
         for c in clients:
             c.gradient_step(aggr, eta)
 
-    # for c in clients:
-    #     y_pred = c.predict(c.X)
-    #     print(mean_square_error(y_pred, c.y))
-
-    print('What is the error (MSE) that each client after running the secure '
+    print('What is the error (MSE) that each client gets after running the '
           'protocol?')
     for c in clients:
         y_pred = c.predict(X_test)
