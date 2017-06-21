@@ -22,20 +22,26 @@ records cannot leave the hospitals, unless they are first encrypted
 must be able to infer WHERE (in which hospital) a patient in the training set
 has been treated.
 
-We solve lienar regression by gradient descent. The server owns the private
+We solve linear regression by gradient descent. The server owns the private
 key and the clients own the public key. The protocol works as follows.
 Until convergence: hospital 1 computes its gradient, encrypts it and send it to
-hospital 2; hospital 2  computes its gradient, encrypts and sums it to
+hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
 server. The server obtains the full gradient of the whole (virtual) patients
 training set; it decrypts it and send it back in the clear to every clients,
-who can update the model.
+who can update their local models.
 
-From the learning standpoint, keep in mind that we are not assuming that each
+From the learning viewpoint, keep in mind that we are not assuming that each
 hospital sees an unbiased sample from the same patients' distribution:
 hospitals could be geographically very distant or serve a diverse population.
 We simulate this condition by sampling each patient NOT uniformly at random.
 (The test set is instead an unbiased sample from the overall distribution.)
+
+From the security viewpoint, even by seeing the overall gradient in the clear,
+nobody among cliens and server can point out where a patient's data is from
+inspecting one gradient iteration. This is true if this RING protocol is run by
+at least 3 clients, who cannot reconstruct each others gradient simply by
+differences.
 
 Inspired by Google's work on secure protocol for federated learning
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
