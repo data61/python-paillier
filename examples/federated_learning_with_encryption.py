@@ -192,6 +192,7 @@ if __name__ == '__main__':
     X, y, X_test, y_test = get_data(n_clients=n_clients)
 
     # Instantiate the server and generate private and public keys
+    # NOTE: using smaller keys sizes wouldn't be cryptographically safe
     server = Server(key_length=1024)
 
     # We need a baseline to understand how good is any future prediction
@@ -220,7 +221,7 @@ if __name__ == '__main__':
 
         # Compute gradients, encrypt and aggregate
         encrypt_aggr = clients[0].encrypted_gradient(sum_to=None)
-        for i in range(1, n_clients)
+        for i in range(1, n_clients):
             encrypt_aggr = clients[i].encrypted_gradient(sum_to=encrypt_aggr)
 
         # Send aggregate to server and decrypt it
