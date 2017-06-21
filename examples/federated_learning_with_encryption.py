@@ -1,17 +1,41 @@
 """
-In this example Alice owns sensitive data of 442 hospital patients with a
-diabetes condition. Recorded variables are age, sex, body mass index,
-average blood pressure, and six blood serum measurements. A last variable
-describes a quantitative measure of the disease progression.
+In this example we assume to deal with sensitive data of 442 hospital patients,
+with different level of progress of diabetes. Recorded variables are age,
+gender, body mass index, average blood pressure, and six blood serum
+measurements. A last variable is a quantitative measure of the disease
+progression. Since this measure is continuous, we will solve the problem by
+linear regression.
 
-Bob is an external consultant hired with the objecting of turning this data
-into an actionable model for predicting the disease progression. Due to
-the hospital privacy policy:
+The data is distributed in 3 hospitals, referred to as `clients`. The objective
+is to make use of the whole (virtual) training set to improve upon the linear
+model that can be trained locally. We will keep
+50 of the patients as a testset and therefore we will not use them
+for training models by any of the hospitals. An additional agent is the
+`server`, who will facilitate the information exchange among the hospitals
+under the following constrainst. Due to privacy policy:
 
-1) Bob is not allowed to see ANY sensitive variables describing the patients.
-2) Moreover, Alice's data cannot leave the hospital premises, not even in
-encrypted form.
+1) The individual patients' record at each hospital cannot leave its premises,
+not even in encrypted form
+2) Even aggregated information/summary (read: gradients) of the individual
+records cannot leave the hospitals, unless they are first encrypted
+3) Not even with knowing the gradients, any of the parties (clients AND server)
+must be able to infer WHERE (in which hospital) a patient in the training set
+has been treated.
 
+We solve lienar regression by gradient descent. The server owns the private
+key and the clients own the public key. The protocol works as follows.
+Until convergence: hospital 1 computes its gradient, encrypts it and send it to
+hospital 2; hospital 2  computes its gradient, encrypts and sums it to
+hospital 1's; hospital 3 does the same and passes the overall sum to the
+server. The server obtains the full gradient of the whole (virtual) patients
+training set; it decrypts it and send it back in the clear to every clients,
+who can update the model.
+
+From the learning standpoint, keep in mind that we are not assuming that each
+hospital sees an unbiased sample from the same patients' distribution:
+hospitals could be geographically very distant or serve a diverse population.
+We simulate this condition by sampling each patient NOT uniformly at random.
+(The test set is instead an unbiased sample from the overall distribution.)
 
 Inspired by Google's work on secure protocol for federated learning
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
@@ -30,8 +54,9 @@ np.random.seed(seed)
 
 def get_data(n_clients):
     """
-    Import the download dataset via sklearn.
+    Import the dataset via sklearn.
     Shuffle and split train/test.
+    Return a `n-clients`-size list of train set and one test set
     """
 
     print("Download data")
@@ -42,13 +67,13 @@ def get_data(n_clients):
     # Add constant to emulate intercept
     X = np.c_[X, np.ones(X.shape[0])]
 
-    # The data is already preprocessed
+    # The features are already preprocessed
     # Shuffle
     perm = np.random.permutation(X.shape[0])
     X, y = X[perm, :], y[perm]
 
     # Select test at random
-    test_size = 100
+    test_size = 50
     test_idx = np.random.choice(X.shape[0], size=test_size, replace=False)
     train_idx = np.ones(X.shape[0], dtype=bool)
     train_idx[test_idx] = False
@@ -56,7 +81,7 @@ def get_data(n_clients):
     X_train, y_train = X[train_idx, :], y[train_idx]
 
     # Split train among multiple clients.
-    # The selection is not at random. We simulate the fact that each client.
+    # The selection is not at random. We simulate the fact that each client
     # sees a potentially very difference sample of patients.
     X, y = [], []
     l = int(X_train.shape[0] / n_clients)
@@ -68,9 +93,8 @@ def get_data(n_clients):
 
 
 def mean_square_error(y_pred, y):
-    """
-        1/m * \sum_{i=1..m} (y_pred_i - y_i)^2
-    """
+    """ 1/m * \sum_{i=1..m} (y_pred_i - y_i)^2 """
+
     return np.mean((y - y_pred) ** 2)
 
 
@@ -91,6 +115,7 @@ def sum_encrypted_vectors(x, y):
 
 
 class Server:
+    """Hold the private key. Decrypt the average gradient"""
 
     def __init__(self, key_length=1024):
         self.pubkey, self.privkey = \
@@ -101,6 +126,10 @@ class Server:
 
 
 class Client:
+    """Run linear regression either with local data or by gradient steps,
+    where gradients can be send from remotely.
+    Hold the private key and can encrypt gradients to send remotely.
+    """
 
     def __init__(self, name, X, y, pubkey):
         self.name = name
@@ -108,7 +137,7 @@ class Client:
         self.X, self.y = X, y
         self.weights = np.zeros(X.shape[1])
 
-    def fit(self, n_iter, eta):
+    def fit(self, n_iter, eta=0.01):
         """Linear regression for n_iter"""
 
         for _ in range(n_iter):
@@ -148,7 +177,7 @@ class Client:
 
 if __name__ == '__main__':
 
-    names = ['Alice', 'Bob', 'Carol']
+    names = ['Hospital 1', 'Hospital 2', 'Hospital 3']
     n_clients = len(names)
 
     X, y, X_test, y_test = get_data(n_clients=n_clients)
@@ -162,12 +191,18 @@ if __name__ == '__main__':
         print('Baseline at test time:', mean_square_error(np.mean(y[i]), y_test))
 
     # Instantiate Alice, Bob and Carol.
-    # Each client gets the public key at creation
+    # Each client gets the public key at creation and its own local dataset
     clients = []
     for i in range(n_clients):
         clients.append(Client(names[i], X[i], y[i], server.pubkey))
 
     # Each client trains a linear regressor on its own data
+    print('What is the error (MSE) that each client would get on test set by '
+          'training only on its own local data?')
+    for c in clients:
+        c.fit(n_iter=10)
+        y_pred = c.predict(X_test)
+        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred, y_test)))
 
 
     # Each client sends its own model to the next one, in a RING protocol,
@@ -177,9 +212,11 @@ if __name__ == '__main__':
     # client's individual model.
 
 
-    # The federated learning with gradient from the google paper
+    # The federated learning with gradient descent
     n_iter = 20
     eta = 0.01
+    print('Running distributed gradient aggregation for {:d} iterations'
+          .format(n_iter))
     for i in range(n_iter):
 
         # Compute gradients, encrypt and aggregate
@@ -194,10 +231,12 @@ if __name__ == '__main__':
         for c in clients:
             c.gradient_step(aggr, eta)
 
-    for c in clients:
-        y_pred = c.predict(c.X)
-        print(mean_square_error(y_pred, c.y))
+    # for c in clients:
+    #     y_pred = c.predict(c.X)
+    #     print(mean_square_error(y_pred, c.y))
 
+    print('What is the error (MSE) that each client after running the secure '
+          'protocol?')
     for c in clients:
         y_pred = c.predict(X_test)
-        print(mean_square_error(y_pred, y_test))
+        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred, y_test)))
