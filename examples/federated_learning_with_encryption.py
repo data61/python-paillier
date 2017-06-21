@@ -220,10 +220,10 @@ if __name__ == '__main__':
 
         # Compute gradients, encrypt and aggregate
         encrypt_aggr = clients[0].encrypted_gradient(sum_to=None)
-        encrypt_aggr = clients[1].encrypted_gradient(sum_to=encrypt_aggr)
-        encrypt_aggr = clients[2].encrypted_gradient(sum_to=encrypt_aggr)
+        for i in range(1, n_clients)
+            encrypt_aggr = clients[i].encrypted_gradient(sum_to=encrypt_aggr)
 
-        # Send aggregate to server, which decrypts
+        # Send aggregate to server and decrypt it
         aggr = server.decrypt_aggregate(encrypt_aggr, n_clients)
 
         # Take gradient steps
