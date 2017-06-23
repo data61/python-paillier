@@ -104,4 +104,6 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
-
+# Data folders downloaded for examples
+*enron1
+*enron2
