@@ -6,30 +6,28 @@ measurements. A last variable is a quantitative measure of the disease
 progression. Since this measure is continuous, we will solve the problem by
 linear regression.
 
-The data is distributed in 3 hospitals, referred to as `clients`. The objective
-is to make use of the whole (virtual) training set to improve upon the linear
-model that can be trained locally. We will keep
-50 of the patients as a testset and therefore we will not use them
-for training models by any of the hospitals. An additional agent is the
+The data is distributed among 3 hospitals, referred as `clients`. The objective
+is to make use of the whole (virtual) training set to improve upon the
+model that can be trained locally. 50 patients will be kept as a testset
+and not used for training. An additional agent is the
 `server`, who will facilitate the information exchange among the hospitals
-under the following constrainst. Due to privacy policy:
+under the following constraints. Due to privacy policy:
 
 1) The individual patients' record at each hospital cannot leave its premises,
 not even in encrypted form
 2) Even aggregated information/summary (read: gradients) of the individual
 records cannot leave the hospitals, unless they are first encrypted
-3) Not even with knowing the gradients, any of the parties (clients AND server)
-must be able to infer WHERE (in which hospital) a patient in the training set
-has been treated.
+3) None of the parties (clients AND server) must be able to infer WHERE
+(in which hospital) a patient in the training set has been treated.
 
 We solve linear regression by gradient descent. The server owns the private
 key and the clients own the public key. The protocol works as follows.
-Until convergence: hospital 1 computes its gradient, encrypts it and send it to
+Until convergence: hospital 1 computes its gradient, encrypts it and sends it to
 hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
-server. The server obtains the full gradient of the whole (virtual) patients
-training set; it decrypts it and send it back in the clear to every clients,
-who can update their local models.
+server. The server obtains the gradient of the whole (virtual)
+training set; it decrypts it and sends it back in the clear to every client,
+who can update the respective local models.
 
 From the learning viewpoint, keep in mind that we are not assuming that each
 hospital sees an unbiased sample from the same patients' distribution:
@@ -37,10 +35,10 @@ hospitals could be geographically very distant or serve a diverse population.
 We simulate this condition by sampling each patient NOT uniformly at random.
 (The test set is instead an unbiased sample from the overall distribution.)
 
-From the security viewpoint, even by seeing the overall gradient in the clear,
-nobody among cliens and server can point out where a patient's data is from
+From the security viewpoint, even by seeing the aggregated gradient in the clear,
+nobody among cliens and server can point out where a patient's data is from by
 inspecting one gradient iteration. This is true if this RING protocol is run by
-at least 3 clients, who cannot reconstruct each others gradient simply by
+at least 3 clients, who cannot reconstruct each others' gradient simply by
 differences.
 
 Inspired by Google's work on secure protocol for federated learning
