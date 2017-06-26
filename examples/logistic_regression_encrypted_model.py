@@ -8,9 +8,9 @@ from
 3) letting Bob know which of his e-mails are spam or not.
 
 Alice trains a spam classifier with logistic regression on some data she
-possesses. After learning, she generates public/private key pair with a Paillier
-schema. The model is encrypted with the public key. The public key and the
-encrypted model are sent to Bob. Bob applies the encrypted model to his own
+possesses. After learning, she generates public/private key pair with a
+Paillier schema. The model is encrypted with the public key. The public key and
+the encrypted model are sent to Bob. Bob applies the encrypted model to his own
 data, obtaining encrypted scores for each e-mail. Bob sends them to Alice.
 Alice decrypts them with the private key to obtain the predictions spam vs. not
 spam.

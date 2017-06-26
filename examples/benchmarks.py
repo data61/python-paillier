@@ -8,6 +8,7 @@ import resource
 import time
 import phe.paillier as paillier
 
+
 def bench_encrypt(pubkey, nums):
     for num in nums:
         pubkey.encrypt(num)
@@ -78,15 +79,14 @@ def bench_mem(test_size):
         if not i % 10000:
             # This is probably KB (i.e. 1000 bytes) when run on linux
             r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - r_init
-            print('Memory usage for {:,} encrypted numbers = {:,} ({:.4f} per number)'.format(
-                i, r, i and r / i
-            ))
+            print('Memory usage for {:,} encrypted numbers = {:,} ({:.4f} per '
+                  'number)'.format(i, r, i and r / i))
         nums.append(pubkey.encrypt(random.random()))
 
-#bench_mem(1000000)  # NOTE: this will take a long time
+# bench_mem(1000000)  # NOTE: this will take a long time
+
 
 times = []
 key_sizes = [128, 256, 512, 1024, 2048, 4096, 8192]
 for key_size in key_sizes:
     times.append(bench_time(1000, key_size))
-

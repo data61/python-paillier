@@ -22,8 +22,8 @@ records cannot leave the hospitals, unless they are first encrypted
 
 We solve linear regression by gradient descent. The server owns the private
 key and the clients own the public key. The protocol works as follows.
-Until convergence: hospital 1 computes its gradient, encrypts it and sends it to
-hospital 2; hospital 2 computes its gradient, encrypts and sums it to
+Until convergence: hospital 1 computes its gradient, encrypts it and sends it
+to hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
 server. The server obtains the gradient of the whole (virtual)
 training set; it decrypts it and sends it back in the clear to every client,
@@ -35,11 +35,11 @@ hospitals could be geographically very distant or serve a diverse population.
 We simulate this condition by sampling each patient NOT uniformly at random.
 (The test set is instead an unbiased sample from the overall distribution.)
 
-From the security viewpoint, even by seeing the aggregated gradient in the clear,
-nobody among cliens and server can point out where a patient's data is from by
-inspecting one gradient iteration. This is true if this RING protocol is run by
-at least 3 clients, who cannot reconstruct each others' gradient simply by
-differences.
+From the security viewpoint, even by seeing the aggregated gradient in the
+clear, nobody among cliens and server can point out where a patient's data is
+from by inspecting one gradient iteration. This is true if this RING protocol
+is run by at least 3 clients, who cannot reconstruct each others' gradient
+simply by differences.
 
 Inspired by Google's work on secure protocol for federated learning
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
@@ -88,10 +88,10 @@ def get_data(n_clients):
     # The selection is not at random. We simulate the fact that each client
     # sees a potentially very difference sample of patients.
     X, y = [], []
-    l = int(X_train.shape[0] / n_clients)
+    step = int(X_train.shape[0] / n_clients)
     for c in range(n_clients):
-        X.append(X_train[l * c: l * (c + 1), :])
-        y.append(y_train[l * c: l * (c + 1)])
+        X.append(X_train[step * c: step * (c + 1), :])
+        y.append(y_train[step * c: step * (c + 1)])
 
     return X, y, X_test, y_test
 
@@ -115,7 +115,7 @@ def sum_encrypted_vectors(x, y):
     if len(x) != len(y):
         raise Exception('Encrypted vectors must have the same size')
 
-    return [x[i] + y[i]  for i in range(len(x))]
+    return [x[i] + y[i] for i in range(len(x))]
 
 
 class Server:
@@ -154,10 +154,11 @@ class Client:
         self.weights -= eta * gradient
 
     def compute_gradient(self):
-        """Return the gradient computed at the current model on all training set"""
+        """Return the gradient computed at the current model on all training
+        set"""
 
         delta = self.predict(self.X) - self.y
-        return  delta.dot(self.X)
+        return delta.dot(self.X)
 
     def predict(self, X):
         """Score test data"""
@@ -193,11 +194,6 @@ if __name__ == '__main__':
     # NOTE: using smaller keys sizes wouldn't be cryptographically safe
     server = Server(key_length=1024)
 
-    # We need a baseline to understand how good is any future prediction
-    # print('Compute a baseline: the mean of all training data')
-    # for i in range(n_clients):
-    #     print('Baseline at test time:', mean_square_error(np.mean(y[i]), y_test))
-
     # Instantiate the clients.
     # Each client gets the public key at creation and its own local dataset
     clients = []
@@ -210,7 +206,8 @@ if __name__ == '__main__':
     for c in clients:
         c.fit(n_iter, eta)
         y_pred = c.predict(X_test)
-        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred, y_test)))
+        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred,
+                                                               y_test)))
 
     # The federated learning with gradient descent
     print('Running distributed gradient aggregation for {:d} iterations'
@@ -233,4 +230,5 @@ if __name__ == '__main__':
           'protocol?')
     for c in clients:
         y_pred = c.predict(X_test)
-        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred, y_test)))
+        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred,
+                                                               y_test)))
