@@ -8,15 +8,16 @@ linear regression.
 
 The data is distributed among 3 hospitals, referred as `clients`. The objective
 is to make use of the whole (virtual) training set to improve upon the
-model that can be trained locally. 50 patients will be kept as a testset
-and not used for training. An additional agent is the
-`server`, who will facilitate the information exchange among the hospitals
-under the following constraints. Due to privacy policy:
+model that can be trained locally. The scenario is often referred to as
+`horizontal partion`. 50 patients will be kept as a testset and not used
+for training. An additional agent is the `server`, who will facilitate the
+information exchange among the hospitals under the following constraints. Due
+to privacy policy:
 
 1) The individual patients' record at each hospital cannot leave its premises,
 not even in encrypted form
-2) Even aggregated information/summary (read: gradients) of the individual
-records cannot leave the hospitals, unless they are first encrypted
+2) Even information/summary derived (read: gradients) from any individual
+client's dataset cannot leave a hospital, unless it is first encrypted
 3) None of the parties (clients AND server) must be able to infer WHERE
 (in which hospital) a patient in the training set has been treated.
 
@@ -27,7 +28,9 @@ to hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
 server. The server obtains the gradient of the whole (virtual)
 training set; it decrypts it and sends it back in the clear to every client,
-who can update the respective local models.
+who can update the respective local models. (We assume that this aggregate
+gradient does not disclose any sensitive information about individuals data
+--- otherwise differential privacy could be used on top of our protocol.)
 
 From the learning viewpoint, keep in mind that we are not assuming that each
 hospital sees an unbiased sample from the same patients' distribution:
@@ -39,7 +42,7 @@ From the security viewpoint, even by seeing the aggregated gradient in the
 clear, nobody among cliens and server can point out where a patient's data is
 from by inspecting one gradient iteration. This is true if this RING protocol
 is run by at least 3 clients, who cannot reconstruct each others' gradient
-simply by differences.
+simply by difference.
 
 Inspired by Google's work on secure protocol for federated learning
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
