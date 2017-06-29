@@ -6,11 +6,11 @@ measurements. A last variable is a quantitative measure of the disease
 progression. Since this measure is continuous, we will solve the problem by
 linear regression.
 
-The data is distributed among 3 hospitals, referred as `clients`. The objective
+The data is distributed among 3 hospitals, referred as 'clients'. The objective
 is to make use of the whole (virtual) training set to improve upon the
 model that can be trained locally. The scenario is often referred to as
-`horizontal partion`. 50 patients will be kept as a testset and not used
-for training. An additional agent is the `server`, who will facilitate the
+'horizontal partion'. 50 patients will be kept as a testset and not used
+for training. An additional agent is the 'server' who will facilitate the
 information exchange among the hospitals under the following constraints. Due
 to privacy policy:
 
@@ -44,7 +44,7 @@ from by inspecting one gradient iteration. This is true if this RING protocol
 is run by at least 3 clients, who cannot reconstruct each others' gradient
 simply by difference.
 
-Inspired by Google's work on secure protocol for federated learning
+Inspired by Google's work on secure protocols for federated learning
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
 
 Dependencies: numpy, sklearn
@@ -89,7 +89,7 @@ def get_data(n_clients):
 
     # Split train among multiple clients.
     # The selection is not at random. We simulate the fact that each client
-    # sees a potentially very difference sample of patients.
+    # sees a potentially very different sample of patients.
     X, y = [], []
     step = int(X_train.shape[0] / n_clients)
     for c in range(n_clients):
