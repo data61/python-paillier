@@ -21,6 +21,11 @@ client's dataset cannot leave a hospital, unless it is first encrypted
 3) None of the parties (clients AND server) must be able to infer WHERE
 (in which hospital) a patient in the training set has been treated.
 
+(Notice that we do not protect from inferring IF a particular patient's data
+has been used during learning. Differential privacy could be used on top of
+our protocol for addressing the problem. For simplicity, we do not discuss
+it in this example.)
+
 We solve linear regression by gradient descent. The server owns the private
 key and the clients own the public key. The protocol works as follows.
 Until convergence: hospital 1 computes its gradient, encrypts it and sends it
@@ -28,9 +33,7 @@ to hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
 server. The server obtains the gradient of the whole (virtual)
 training set; it decrypts it and sends it back in the clear to every client,
-who can update the respective local models. (We assume that this aggregate
-gradient does not disclose any sensitive information about individuals data
---- otherwise differential privacy could be used on top of our protocol.)
+who can update the respective local models.
 
 From the learning viewpoint, keep in mind that we are not assuming that each
 hospital sees an unbiased sample from the same patients' distribution:
