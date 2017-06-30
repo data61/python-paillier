@@ -186,7 +186,7 @@ class Client:
 if __name__ == '__main__':
 
     # Learning params
-    n_iter, eta = 20, 0.01
+    n_iter, eta = 50, 0.01
 
     names = ['Hospital 1', 'Hospital 2', 'Hospital 3']
     n_clients = len(names)
