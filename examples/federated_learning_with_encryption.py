@@ -1,6 +1,7 @@
 """
 This example involves learning using sensitive medical data from multiple hospitals
-to predict diabetes progression in patients.
+to predict diabetes progression in patients. The data is a standard dataset from
+sklearn[1].
 
 Recorded variables are:
 - age,
@@ -58,8 +59,10 @@ at least 3 clients, which prevents reconstruction of each others' gradients
 by simple difference.
 
 This example was inspired by Google's work on secure protocols for federated
-learning.
-https://research.googleblog.com/2017/04/federated-learning-collaborative.html
+learning[2].
+
+[1]: http://scikit-learn.org/stable/datasets/index.html#diabetes-dataset
+[2]: https://research.googleblog.com/2017/04/federated-learning-collaborative.html
 
 Dependencies: numpy, sklearn
 """
@@ -75,12 +78,10 @@ np.random.seed(seed)
 
 def get_data(n_clients):
     """
-    Import the dataset via sklearn.
-    Shuffle and split train/test.
-    Return a `n-clients`-size list of train set and one test set
+    Import the dataset via sklearn, shuffle and split train/test.
+    Return training, target lists for `n_clients` and a holdout test set
     """
-
-    print("Downloading data")
+    print("Loading data")
     diabetes = load_diabetes()
     y = diabetes.target
     X = diabetes.data
@@ -115,41 +116,38 @@ def get_data(n_clients):
 
 def mean_square_error(y_pred, y):
     """ 1/m * \sum_{i=1..m} (y_pred_i - y_i)^2 """
-
     return np.mean((y - y_pred) ** 2)
 
 
-def encrypt_vector(pubkey, x):
-    return [pubkey.encrypt(x[i]) for i in range(x.shape[0])]
+def encrypt_vector(public_key, x):
+    return [public_key.encrypt(i) for i in x]
 
 
-def decrypt_vector(privkey, x):
-    return np.array([privkey.decrypt(i) for i in x])
+def decrypt_vector(private_key, x):
+    return np.array([private_key.decrypt(i) for i in x])
 
 
 def sum_encrypted_vectors(x, y):
-
     if len(x) != len(y):
-        raise Exception('Encrypted vectors must have the same size')
-
+        raise ValueError('Encrypted vectors must have the same size')
     return [x[i] + y[i] for i in range(len(x))]
 
 
 class Server:
-    """Hold the private key. Decrypt the average gradient"""
+    """Private key holder. Decrypts the average gradient"""
 
-    def __init__(self, key_length=1024):
-        self.pubkey, self.privkey = \
-            paillier.generate_paillier_keypair(n_length=key_length)
+    def __init__(self, key_length):
+        self.pubkey, self.privkey = paillier.generate_paillier_keypair(n_length=key_length)
 
     def decrypt_aggregate(self, input_model, n_clients):
         return decrypt_vector(self.privkey, input_model) / n_clients
 
 
 class Client:
-    """Run linear regression either with local data or by gradient steps,
-    where gradients can be send from remotely.
-    Hold the private key and can encrypt gradients to send remotely.
+    """Runs linear regression with local data or by gradient steps,
+    where gradient can be passed in.
+
+    Using public key can encrypt locally computed gradients.
     """
 
     def __init__(self, name, X, y, pubkey):
@@ -160,20 +158,17 @@ class Client:
 
     def fit(self, n_iter, eta=0.01):
         """Linear regression for n_iter"""
-
         for _ in range(n_iter):
             gradient = self.compute_gradient()
             self.gradient_step(gradient, eta)
 
     def gradient_step(self, gradient, eta=0.01):
         """Update the model with the given gradient"""
-
         self.weights -= eta * gradient
 
     def compute_gradient(self):
-        """Return the gradient computed at the current model on all training
-        set"""
-
+        """Compute the gradient of the current model using the training set
+        """
         delta = self.predict(self.X) - self.y
         return delta.dot(self.X)
 
@@ -182,34 +177,27 @@ class Client:
         return X.dot(self.weights)
 
     def encrypted_gradient(self, sum_to=None):
-        """Compute gradient. Encrypt it.
+        """Compute and encrypt gradient.
+
         When `sum_to` is given, sum the encrypted gradient to it, assumed
         to be another vector of the same size
         """
-
-        gradient = encrypt_vector(self.pubkey, self.compute_gradient())
+        encrypted_gradient = encrypt_vector(self.pubkey, self.compute_gradient())
 
         if sum_to is not None:
-            if len(sum_to) != len(gradient):
-                raise Exception('Encrypted vectors must have the same size')
-            return sum_encrypted_vectors(sum_to, gradient)
+            return sum_encrypted_vectors(sum_to, encrypted_gradient)
         else:
-            return gradient
+            return encrypted_gradient
 
 
-if __name__ == '__main__':
-
-    # Learning params
-    n_iter, eta = 50, 0.01
-
-    names = ['Hospital 1', 'Hospital 2', 'Hospital 3']
-    n_clients = len(names)
+def federated_learning(n_iter, eta, n_clients, key_length):
+    names = ['Hospital {}'.format(i) for i in range(1, n_clients + 1)]
 
     X, y, X_test, y_test = get_data(n_clients=n_clients)
 
     # Instantiate the server and generate private and public keys
     # NOTE: using smaller keys sizes wouldn't be cryptographically safe
-    server = Server(key_length=1024)
+    server = Server(key_length=key_length)
 
     # Instantiate the clients.
     # Each client gets the public key at creation and its own local dataset
@@ -218,13 +206,13 @@ if __name__ == '__main__':
         clients.append(Client(names[i], X[i], y[i], server.pubkey))
 
     # Each client trains a linear regressor on its own data
-    print('What is the error (MSE) that each client would get on test set by '
-          'training only on its own local data?')
+    print('Error (MSE) that each client gets on test set by '
+          'training only on own local data:')
     for c in clients:
         c.fit(n_iter, eta)
         y_pred = c.predict(X_test)
-        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred,
-                                                               y_test)))
+        mse = mean_square_error(y_pred, y_test)
+        print('{:s}:\t{:.2f}'.format(c.name, mse))
 
     # The federated learning with gradient descent
     print('Running distributed gradient aggregation for {:d} iterations'
@@ -233,8 +221,8 @@ if __name__ == '__main__':
 
         # Compute gradients, encrypt and aggregate
         encrypt_aggr = clients[0].encrypted_gradient(sum_to=None)
-        for i in range(1, n_clients):
-            encrypt_aggr = clients[i].encrypted_gradient(sum_to=encrypt_aggr)
+        for c in clients:
+            encrypt_aggr = c.encrypted_gradient(sum_to=encrypt_aggr)
 
         # Send aggregate to server and decrypt it
         aggr = server.decrypt_aggregate(encrypt_aggr, n_clients)
@@ -243,9 +231,12 @@ if __name__ == '__main__':
         for c in clients:
             c.gradient_step(aggr, eta)
 
-    print('What is the error (MSE) that each client gets after running the '
-          'protocol?')
+    print('Error (MSE) that each client gets after running the protocol:')
     for c in clients:
         y_pred = c.predict(X_test)
-        print('{:s}:\t{:.2f}'.format(c.name, mean_square_error(y_pred,
-                                                               y_test)))
+        mse = mean_square_error(y_pred, y_test)
+        print('{:s}:\t{:.2f}'.format(c.name, mse))
+
+if __name__ == '__main__':
+    # Set learning, data split, and security params
+    federated_learning(n_iter=50, eta=0.01, n_clients=3, key_length=1024)
