@@ -1,53 +1,64 @@
 """
-In this example we assume to deal with sensitive data of 442 hospital patients,
-with different level of progress of diabetes. Recorded variables are age,
-gender, body mass index, average blood pressure, and six blood serum
-measurements. A last variable is a quantitative measure of the disease
-progression. Since this measure is continuous, we will solve the problem by
-linear regression.
+This example involves learning using sensitive medical data from multiple hospitals
+to predict diabetes progression in patients.
 
-The data is distributed among 3 hospitals, referred as 'clients'. The objective
-is to make use of the whole (virtual) training set to improve upon the
-model that can be trained locally. The scenario is often referred to as
-'horizontal partion'. 50 patients will be kept as a testset and not used
-for training. An additional agent is the 'server' who will facilitate the
-information exchange among the hospitals under the following constraints. Due
-to privacy policy:
+Recorded variables are:
+- age,
+- gender,
+- body mass index,
+- average blood pressure,
+- and six blood serum measurements.
 
-1) The individual patients' record at each hospital cannot leave its premises,
-not even in encrypted form
-2) Even information/summary derived (read: gradients) from any individual
-client's dataset cannot leave a hospital, unless it is first encrypted
-3) None of the parties (clients AND server) must be able to infer WHERE
-(in which hospital) a patient in the training set has been treated.
+The target variable is a quantitative measure of the disease progression.
+Since this measure is continuous, we solve the problem using linear regression.
 
-(Notice that we do not protect from inferring IF a particular patient's data
+The patients' data is split between 3 hospitals, all sharing the same features
+but different entities. We refer to this scenario as horizontally partitioned.
+
+The objective is to make use of the whole (virtual) training set to improve
+upon the model that can be trained locally at each hospital.
+
+50 patients will be kept as a test set and not used for training.
+
+An additional agent is the 'server' who facilitates the information exchange
+among the hospitals under the following privacy constraints:
+
+1) The individual patient's record at each hospital cannot leave the premises,
+   not even in encrypted form.
+2) Information derived (read: gradients) from any hospital's dataset
+   cannot be shared, unless it is first encrypted.
+3) None of the parties (hospitals AND server) should be able to infer WHERE
+   (in which hospital) a patient in the training set has been treated.
+
+Note that we do not protect from inferring IF a particular patient's data
 has been used during learning. Differential privacy could be used on top of
 our protocol for addressing the problem. For simplicity, we do not discuss
-it in this example.)
+it in this example.
 
-We solve linear regression by gradient descent. The server owns the private
-key and the clients own the public key. The protocol works as follows.
+In this example linear regression is solved by gradient descent. The server
+creates a paillier public/private keypair and does not share the private key.
+The hospital clients are given the public key. The protocol works as follows.
 Until convergence: hospital 1 computes its gradient, encrypts it and sends it
 to hospital 2; hospital 2 computes its gradient, encrypts and sums it to
 hospital 1's; hospital 3 does the same and passes the overall sum to the
-server. The server obtains the gradient of the whole (virtual)
-training set; it decrypts it and sends it back in the clear to every client,
-who can update the respective local models.
+server. The server obtains the gradient of the whole (virtual) training set;
+decrypts it and sends the gradient back - in the clear - to every client.
+The clients then update their respective local models.
 
-From the learning viewpoint, keep in mind that we are not assuming that each
-hospital sees an unbiased sample from the same patients' distribution:
+From the learning viewpoint, we are not assuming that each hospital sees an
+unbiased sample from the same patients' distribution:
 hospitals could be geographically very distant or serve a diverse population.
 We simulate this condition by sampling each patient NOT uniformly at random.
-(The test set is instead an unbiased sample from the overall distribution.)
+The test set however is an unbiased sample from the overall distribution.
 
-From the security viewpoint, even by seeing the aggregated gradient in the
-clear, nobody among cliens and server can point out where a patient's data is
-from by inspecting one gradient iteration. This is true if this RING protocol
-is run by at least 3 clients, who cannot reconstruct each others' gradient
-simply by difference.
+From the security viewpoint, we consider all parties to be "honest but curious".
+Even by seeing the aggregated gradient in the clear, no participant can pinpoint
+where patients' data originated. This is true if this RING protocol is run by
+at least 3 clients, which prevents reconstruction of each others' gradients
+by simple difference.
 
-Inspired by Google's work on secure protocols for federated learning
+This example was inspired by Google's work on secure protocols for federated
+learning.
 https://research.googleblog.com/2017/04/federated-learning-collaborative.html
 
 Dependencies: numpy, sklearn
