@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyphe.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 import os
 import random
 from base64 import urlsafe_b64encode, urlsafe_b64decode
@@ -150,3 +151,12 @@ def int_to_base64(source):
     assert source != 0
     I = hex(source).rstrip("L").lstrip("0x")
     return base64url_encode(unhexlify((len(I) % 2) * '0' + I))
+
+
+def int_to_variable_size_bytes(n: int):
+    n = int(n)
+    min_bits = math.log2(n)
+    digest_bits = 1024
+    while min_bits > digest_bits:
+        digest_bits = digest_bits * 2
+    return n.to_bytes(digest_bits//8, 'big')
