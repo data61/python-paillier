@@ -27,7 +27,7 @@ try:
 except ImportError:
     Mapping = dict
 
-from phe.util import invert, powmod, getprimeover, isqrt, int_to_variable_size_bytes
+from phe.util import invert, powmod, getprimeover, isqrt
 
 DEFAULT_KEYSIZE = 2048
 
@@ -88,9 +88,7 @@ class PaillierPublicKey(object):
         self.max_int = n // 3 - 1
 
     def __repr__(self):
-        nsquare = int_to_variable_size_bytes(self.nsquare)
-        g = int_to_variable_size_bytes(self.g)
-        publicKeyHash = hashlib.sha1(nsquare + g).hexdigest()
+        publicKeyHash = hex(hash(self))[2:]
         return "<PaillierPublicKey {}>".format(publicKeyHash[:10])
 
     def __eq__(self, other):

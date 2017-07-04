@@ -66,22 +66,5 @@ class Base64UtilTest(unittest.TestCase):
             util.int_to_base64(0)
 
 
-
-class MiscUtilTest(unittest.TestCase):
-
-    def testIntToBytesSimple(self):
-        f = util.int_to_variable_size_bytes
-        self.assertEqual(len(f(5234567876543234567654323456765432123456)), 128)
-        self.assertEqual(len(f(1 + 2**1234)), 256)
-        self.assertEqual(len(f(eval('0x{}'.format('F0'*3300)))), 4096)
-
-    def testIntToBytesFuzz(self):
-        r = random.random()
-        for e in [2, 30, 60, 100, 200, 300, 500]:
-            a = int(2**(e * (0.5 + r)))
-            b = util.int_to_variable_size_bytes(a)
-            self.assertIn(len(b), [128, 256, 512, 1024, 2048])
-
-
 if __name__ == "__main__":
     unittest.main()
