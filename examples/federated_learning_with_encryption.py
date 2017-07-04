@@ -137,7 +137,8 @@ class Server:
     """Private key holder. Decrypts the average gradient"""
 
     def __init__(self, key_length):
-        self.pubkey, self.privkey = paillier.generate_paillier_keypair(n_length=key_length)
+         keypair = paillier.generate_paillier_keypair(key_length)
+         self.pubkey, self.privkey = keypair
 
     def decrypt_aggregate(self, input_model, n_clients):
         return decrypt_vector(self.privkey, input_model) / n_clients
@@ -182,7 +183,8 @@ class Client:
         When `sum_to` is given, sum the encrypted gradient to it, assumed
         to be another vector of the same size
         """
-        encrypted_gradient = encrypt_vector(self.pubkey, self.compute_gradient())
+        gradient = self.compute_gradient()
+        encrypted_gradient = encrypt_vector(self.pubkey, gradient)
 
         if sum_to is not None:
             return sum_encrypted_vectors(sum_to, encrypted_gradient)
