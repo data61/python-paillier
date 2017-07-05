@@ -65,6 +65,7 @@ def generate_paillier_keypair(private_keyring=None, n_length=DEFAULT_KEYSIZE):
 
     return public_key, private_key
 
+
 class PaillierPublicKey(object):
     """Contains a public key and associated encryption methods.
 
@@ -87,9 +88,7 @@ class PaillierPublicKey(object):
         self.max_int = n // 3 - 1
 
     def __repr__(self):
-        nsquare = self.nsquare.to_bytes(1024, 'big')
-        g = self.g.to_bytes(1024, 'big')
-        publicKeyHash = hashlib.sha1(nsquare + g).hexdigest()
+        publicKeyHash = hex(hash(self))[2:]
         return "<PaillierPublicKey {}>".format(publicKeyHash[:10])
 
     def __eq__(self, other):
