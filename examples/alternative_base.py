@@ -7,6 +7,7 @@ class ExampleEncodedNumber(paillier.EncodedNumber):
     BASE = 64
     LOG2_BASE = math.log(BASE, 2)
 
+
 print("Generating paillier keypair")
 public_key, private_key = paillier.generate_paillier_keypair()
 
@@ -21,14 +22,16 @@ def encode_and_encrypt_example():
     encrypted = public_key.encrypt(encoded)
 
     print("Decrypting...")
-    decrypted_but_encoded = private_key.decrypt_encoded(encrypted, ExampleEncodedNumber)
+    decrypted_but_encoded = \
+        private_key.decrypt_encoded(encrypted, ExampleEncodedNumber)
 
     print("Checking the decrypted number is what we started with")
     assert abs(2.1 ** 20 - decrypted_but_encoded.decode()) < 1e-12
 
 
 def math_example():
-    print("Encoding two large positive numbers. With a BASE 64 encoding scheme")
+    print("Encoding two large positive numbers. With a BASE 64 encoding "
+          "scheme")
 
     a = 102545 + (64 ** 8)
     b = 123 + (8 ** 20)
@@ -47,12 +50,14 @@ def math_example():
     encrypted_c = encrypted_a + encrypted_b
 
     print("Decrypting the one encrypted sum")
-    decrypted_but_encoded = private_key.decrypt_encoded(encrypted_c, ExampleEncodedNumber)
+    decrypted_but_encoded = \
+        private_key.decrypt_encoded(encrypted_c, ExampleEncodedNumber)
 
     print("Checking the decrypted number is what we started with")
 
     print("Decrypted: {}".format(decrypted_but_encoded.decode()))
     assert abs((a + b) - decrypted_but_encoded.decode()) < 1e-15
+
 
 if __name__ == "__main__":
     encode_and_encrypt_example()

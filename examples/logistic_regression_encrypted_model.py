@@ -8,9 +8,9 @@ from
 3) letting Bob know which of his e-mails are spam or not.
 
 Alice trains a spam classifier with logistic regression on some data she
-possesses. After learning, she generates public/private key pair with a Paillier
-schema. The model is encrypted with the public key. The public key and the
-encrypted model are sent to Bob. Bob applies the encrypted model to his own
+possesses. After learning, she generates public/private key pair with a
+Paillier schema. The model is encrypted with the public key. The public key and
+the encrypted model are sent to Bob. Bob applies the encrypted model to his own
 data, obtaining encrypted scores for each e-mail. Bob sends them to Alice.
 Alice decrypts them with the private key to obtain the predictions spam vs. not
 spam.
@@ -121,29 +121,6 @@ def timer():
     print('[elapsed time: %.2f s]' % (time.perf_counter() - time0))
 
 
-class PaillierClassifier:
-    """Scoring with encrypted models"""
-
-    def __init__(self, pubkey):
-        self.pubkey = pubkey
-
-    def set_weights(self, weights, intercept):
-        self.weights = weights
-        self.intercept = intercept
-
-    def encrypted_score(self, x):
-        """Compute the score of `x` by multiplying with the encrypted model,
-        which is a vector of `paillier.EncryptedNumber`"""
-        score = self.intercept
-        _, idx = x.nonzero()
-        for i in idx:
-            score += x[0, i] * self.weights[i]
-        return score
-
-    def encrypted_evaluate(self, X):
-        return [self.encrypted_score(X[i, :]) for i in range(X.shape[0])]
-
-
 class Alice:
     """
     Trains a Logistic Regression model on plaintext data,
@@ -184,13 +161,23 @@ class Bob:
     """
 
     def __init__(self, pubkey):
-        self.classifier = PaillierClassifier(pubkey)
+        self.pubkey = pubkey
 
     def set_weights(self, weights, intercept):
-        self.classifier.set_weights(weights, intercept)
+        self.weights = weights
+        self.intercept = intercept
+
+    def encrypted_score(self, x):
+        """Compute the score of `x` by multiplying with the encrypted model,
+        which is a vector of `paillier.EncryptedNumber`"""
+        score = self.intercept
+        _, idx = x.nonzero()
+        for i in idx:
+            score += x[0, i] * self.weights[i]
+        return score
 
     def encrypted_evaluate(self, X):
-        return self.classifier.encrypted_evaluate(X)
+        return [self.encrypted_score(X[i, :]) for i in range(X.shape[0])]
 
 
 if __name__ == '__main__':
