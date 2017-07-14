@@ -24,7 +24,7 @@ upon the model that can be trained locally at each hospital.
 An additional agent is the 'server' who facilitates the information exchange
 among the hospitals under the following privacy constraints:
 
-1) The individual patient's records at each hospital cannot leave the premises,
+1) The individual patient's record at each hospital cannot leave the premises,
    not even in encrypted form.
 2) Information derived (read: gradients) from any hospital's dataset
    cannot be shared, unless it is first encrypted.
