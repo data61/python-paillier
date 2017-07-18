@@ -46,11 +46,12 @@ server. The server obtains the gradient of the whole (virtual) training set;
 decrypts it and sends the gradient back - in the clear - to every client.
 The clients then update their respective local models.
 
-From the learning viewpoint, we are not assuming that each hospital sees an
-unbiased sample from the same patients' distribution:
+From the learning viewpoint, notice that we are NOT assuming that each
+hospital sees an unbiased sample from the same patients' distribution:
 hospitals could be geographically very distant or serve a diverse population.
-We simulate this condition by sampling each patient NOT uniformly at random.
-The test set however is an unbiased sample from the overall distribution.
+We simulate this condition by sampling patients NOT uniformly at random,
+but in a biased fashion.
+The test set is instead an unbiased sample from the overall distribution.
 
 From the security viewpoint, we consider all parties to be "honest but curious".
 Even by seeing the aggregated gradient in the clear, no participant can pinpoint
