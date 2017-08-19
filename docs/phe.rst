@@ -11,6 +11,15 @@ Paillier
     :undoc-members:
     :show-inheritance:
 
+Encoding
+--------
+
+.. automodule:: phe.encoding
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 
 Utilities
 ---------
@@ -21,12 +30,3 @@ Utilities
     :undoc-members:
     :show-inheritance:
 
-
-CLI
-----
-
-
-.. automodule:: phe.command_line
-    :members:
-    :undoc-members:
-    :show-inheritance:

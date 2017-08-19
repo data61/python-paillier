@@ -1,9 +1,11 @@
 #!/usr/bin/env python3.4
 import math
+
+import phe.encoding
 from phe import paillier
 
 
-class ExampleEncodedNumber(paillier.EncodedNumber):
+class ExampleEncodedNumber(phe.encoding.EncodedNumber):
     BASE = 64
     LOG2_BASE = math.log(BASE, 2)
 
