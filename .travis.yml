@@ -36,7 +36,9 @@ addons:
     - gfortran
     - libgmp-dev
     - libmpfr-dev
+    - libmpfr4
     - libmpc-dev
+    - libmpc2
 
 before_install:
   - export PYTHONFAULTHANDLER=1
