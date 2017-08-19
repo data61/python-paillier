@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Portions Copyright 2012 Google Inc. All Rights Reserved.
 # This file has been modified by NICTA
+import phe.encoding
 from phe.paillier import PaillierPrivateKey, PaillierPublicKey
 
 # This file is part of pyphe.
@@ -168,7 +169,7 @@ class PaillierTestEncodedNumber(PaillierTest):
 
     def setUp(self):
         super().setUp()
-        self.EncodedNumberCls = paillier.EncodedNumber
+        self.EncodedNumberCls = phe.encoding.EncodedNumber
 
 
     def testEncodeInt0(self):
@@ -391,7 +392,7 @@ class PaillierTestEncodedNumberAlternativeBaseLarge(PaillierTestEncodedNumber):
     def setUp(self):
         super().setUp()
 
-        class AltEncodedNumber(paillier.EncodedNumber):
+        class AltEncodedNumber(phe.encoding.EncodedNumber):
             BASE = 64
             LOG2_BASE = math.log(BASE, 2)
 
@@ -405,7 +406,7 @@ class PaillierTestEncodedNumberAlternativeBaseSmall(PaillierTestEncodedNumber):
     def setUp(self):
         super().setUp()
 
-        class AltEncodedNumber(paillier.EncodedNumber):
+        class AltEncodedNumber(phe.encoding.EncodedNumber):
             BASE = 2
             LOG2_BASE = math.log(BASE, 2)
 
@@ -419,7 +420,7 @@ class PaillierTestEncodedNumberAlternativeBaseOdd(PaillierTestEncodedNumber):
     def setUp(self):
         super().setUp()
 
-        class AltEncodedNumber(paillier.EncodedNumber):
+        class AltEncodedNumber(phe.encoding.EncodedNumber):
             BASE = 13
             LOG2_BASE = math.log(BASE, 2)
 
@@ -482,7 +483,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
 
     def testCantAddEncodedWithDifferentKey(self):
         ciphertext1 = self.public_key.encrypt(-15)
-        ciphertext2 = paillier.EncodedNumber(self.other_public_key, 1, ciphertext1.exponent)
+        ciphertext2 = phe.encoding.EncodedNumber(self.other_public_key, 1, ciphertext1.exponent)
         self.assertRaises(ValueError, ciphertext1.__add__, ciphertext2)
 
     def testAddWithEncryptDecryptInt0(self):
@@ -645,7 +646,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
     def testAddWithEncryptedIntAndEncodedNumber(self):
         # Add 1 to a small positive number
         ciphertext1 = self.public_key.encrypt(15)
-        encoded2 = paillier.EncodedNumber.encode(self.public_key, 1)
+        encoded2 = phe.encoding.EncodedNumber.encode(self.public_key, 1)
         ciphertext3 = ciphertext1 + encoded2
         decryption = self.private_key.decrypt(ciphertext3)
         self.assertEqual(16, decryption)
@@ -653,7 +654,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
     def testAddWithEncryptedIntAndEncodedNumberDiffExp0(self):
         # Add 1 to a small positive number
         ciphertext1 = self.public_key.encrypt(15)
-        encoded2 = paillier.EncodedNumber.encode(self.public_key, 1, max_exponent=-50)
+        encoded2 = phe.encoding.EncodedNumber.encode(self.public_key, 1, max_exponent=-50)
         assert encoded2.exponent > -200
         assert ciphertext1.exponent > -200
 
@@ -665,7 +666,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
         # Try with the EncryptedNumber having the smaller exponent
         ciphertext1 = self.public_key.encrypt(15)
         ciphertext2 = ciphertext1.decrease_exponent_to(-10)
-        encoded1 = paillier.EncodedNumber.encode(self.public_key, 1)
+        encoded1 = phe.encoding.EncodedNumber.encode(self.public_key, 1)
         encoded2 = encoded1.decrease_exponent_to(-10)
         ciphertext = ciphertext1.decrease_exponent_to(-200)
         assert encoded2.exponent == -10
@@ -677,7 +678,7 @@ class PaillierTestEncryptedNumber(PaillierTest):
     def testMulWithEncryptedIntAndEncodedNumber(self):
         # Multiply two negative integers
         ciphertext1 = self.public_key.encrypt(-3)
-        encoded2 = paillier.EncodedNumber.encode(self.public_key, -25)
+        encoded2 = phe.encoding.EncodedNumber.encode(self.public_key, -25)
         ciphertext3 = ciphertext1 * encoded2
         decryption = self.private_key.decrypt(ciphertext3)
         self.assertEqual(75, decryption)
@@ -910,14 +911,14 @@ class PaillierTestEncryptedNumber(PaillierTest):
         ciphertext2 = ciphertext1 * 31.4
         self.assertEqual(-3.14, self.private_key.decrypt(ciphertext2))
         self.assertNotEqual(ciphertext2.exponent, ciphertext1.exponent)
-        exp_of_314 = paillier.EncodedNumber.encode(self.public_key, -31.4).exponent
+        exp_of_314 = phe.encoding.EncodedNumber.encode(self.public_key, -31.4).exponent
         self.assertEqual(ciphertext2.exponent, ciphertext1.exponent +exp_of_314)
 
     def testMulWithEncryptedFloatAndEncodedNumber0(self):
         # Multiply a floatish with custom precision by a positive float
         ciphertext1 = self.public_key.encrypt(1.2345678e-12, precision=1e-14)
-        encoded1 = paillier.EncodedNumber.encode(self.public_key, 1.38734864,
-                                                 precision=1e-2)
+        encoded1 = phe.encoding.EncodedNumber.encode(self.public_key, 1.38734864,
+                                                     precision=1e-2)
         ciphertext2 = ciphertext1 * encoded1
         self.assertAlmostEqual(1.71e-12, self.private_key.decrypt(ciphertext2), places=3)
 
@@ -941,14 +942,14 @@ class PaillierTestEncryptedNumber(PaillierTest):
         ciphertext2 = ciphertext1 * -31.4
         self.assertEqual(3.14, self.private_key.decrypt(ciphertext2))
         self.assertNotEqual(ciphertext2.exponent, ciphertext1.exponent)
-        exp_of_314 = paillier.EncodedNumber.encode(self.public_key, -31.4).exponent
+        exp_of_314 = phe.encoding.EncodedNumber.encode(self.public_key, -31.4).exponent
         self.assertEqual(ciphertext2.exponent, ciphertext1.exponent +exp_of_314)
 
     def testMulWithEncryptedFloatAndEncodedNumber1(self):
         # Multiply a floatish with custom precision by a negative float
         ciphertext1 = self.public_key.encrypt(1.2345678e-12, precision=1e-14)
-        encoded1 = paillier.EncodedNumber.encode(self.public_key, -1.38734864,
-                                                 precision=1e-2)
+        encoded1 = phe.encoding.EncodedNumber.encode(self.public_key, -1.38734864,
+                                                     precision=1e-2)
         ciphertext2 = ciphertext1 * encoded1
         self.assertAlmostEqual(-1.71e-12, self.private_key.decrypt(ciphertext2), places=3)
 
@@ -985,8 +986,8 @@ class PaillierTestEncryptedNumber(PaillierTest):
     def testAddWithEncryptedFloatAndEncodedNumber(self):
         # Add two floats with different precisions
         ciphertext1 = self.public_key.encrypt(0.1, precision=1e-3)
-        encoded1 = paillier.EncodedNumber.encode(self.public_key, 0.2,
-                                                 precision=1e-20)
+        encoded1 = phe.encoding.EncodedNumber.encode(self.public_key, 0.2,
+                                                     precision=1e-20)
         self.assertNotEqual(ciphertext1.exponent, encoded1.exponent)
         old_exponent = ciphertext1.exponent
 
@@ -1001,11 +1002,11 @@ class PaillierTestEncryptedNumber(PaillierTest):
     def testMulWithEncryptedFloatAndEncodedNumber(self):
         # Multiply a floatish by an encoded negative float
         ciphertext1 = self.public_key.encrypt(-0.1)
-        encoded1 = paillier.EncodedNumber.encode(self.public_key, -31.4)
+        encoded1 = phe.encoding.EncodedNumber.encode(self.public_key, -31.4)
         ciphertext2 = ciphertext1 * encoded1
         self.assertEqual(3.14, self.private_key.decrypt(ciphertext2))
         self.assertNotEqual(ciphertext2.exponent, ciphertext1.exponent)
-        exp_of_314 = paillier.EncodedNumber.encode(self.public_key, -31.4).exponent
+        exp_of_314 = phe.encoding.EncodedNumber.encode(self.public_key, -31.4).exponent
         self.assertEqual(ciphertext2.exponent, ciphertext1.exponent +exp_of_314)
 
     def testObfuscate(self):
