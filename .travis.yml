@@ -14,7 +14,6 @@ python:
 
 env:
   - TEST_PYCRYPTO=1
-  - TEST_PYCRYPTO=0
 
 matrix:
   allow_failures:
