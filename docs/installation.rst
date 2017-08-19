@@ -8,8 +8,8 @@ at least 3.3.
 
 .. note::
 
-    A Big integer math library is used to increase the speed of
-    python-paillier and to access a Cryptographic random source.
+    A big integer math library is used to increase the speed of
+    python-paillier and to access a cryptographic random source.
     All big integer math has been implemented with
     `GMP <https://gmplib.org/>`_ - the GNU Multiple Precision
     arithmetic library. This dependency should be installed for
@@ -49,7 +49,7 @@ Manual installation
 -------------------
 
 To install from the source package, first install any of the (optional)
-dependencies (eg Crypto, gmpy2). A list can be found in
+dependencies (eg pycrypto, gmpy2). A list can be found in
 ``requirements.txt``.
 
 Then install as normal::
