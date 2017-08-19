@@ -68,6 +68,9 @@ before_install:
   - popd
   - set -o pipefail
 
+install:
+  - travis_retry pip install -e .
+
 script:
   - nosetests -v --with-timer --timer-top-n 10
   - if [ "${TESTMODE}" == "full" ]; then coverage run `which nosetests`; coverage report phe/*; fi
