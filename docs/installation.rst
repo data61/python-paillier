@@ -3,9 +3,22 @@
 Installation
 ============
 
+The python-paillier library requires a minimum Python version of
+at least 3.3.
+
 .. note::
 
-    This library requires a minimum Python version of at least 3.3.
+    A Big integer math library is used to increase the speed of
+    python-paillier and to access a Cryptographic random source.
+    All big integer math has been implemented with
+    `GMP <https://gmplib.org/>`_ - the GNU Multiple Precision
+    arithmetic library. This dependency should be installed for
+    your operating system.
+
+    On Ubuntu systems the following packages should be installed::
+
+        libmpc-dev libmpfr-dev libmpfr4 libgmp3-dev
+
 
 Using pip
 ---------
@@ -25,20 +38,37 @@ To also install those::
     pip install "phe[cli,examples]"
 
 
+Or, if you have `virtualenvwrapper <https://virtualenvwrapper.readthedocs.org/en/latest/>`_
+installed::
+
+    $ mkvirtualenv phe
+    $ pip install -e ".[CLI]"
+
+
 Manual installation
 -------------------
 
-To install from the source package, first install the optional dependencies (eg Crypto)::
-
-    $ pip install -r requirements.txt
+To install from the source package, first install any of the (optional)
+dependencies (eg Crypto, gmpy2). A list can be found in
+``requirements.txt``.
 
 Then install as normal::
 
     $ python setup.py install
 
 
-Or, if you have `virtualenvwrapper <https://virtualenvwrapper.readthedocs.org/en/latest/>`_
-installed::
+Docker
+------
 
-    $ mkvirtualenv phe
-    $ pip install -e ".[CLI]"
+A minimal Docker file based on alpine linux::
+
+    FROM python:3-alpine
+    RUN ["apk", "add", "--no-cache",    \
+            "g++",                      \
+            "musl-dev",                 \
+            "gmp-dev",                  \
+            "mpfr-dev",                 \
+            "mpc1-dev"                  \
+        ]
+    RUN pip install phe
+

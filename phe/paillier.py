@@ -19,7 +19,6 @@
 
 """Paillier encryption library for partially homomorphic encryption."""
 import random
-import hashlib
 import math
 import sys
 try:
