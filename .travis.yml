@@ -9,15 +9,16 @@ python:
   - '3.5'
   - '3.6'
   - 'nightly'
+  - 'pypy3'
 
 
 env:
   - TEST_PYCRYPTO=1
-  - TEST_PYCRYPTO=0
 
 matrix:
   allow_failures:
     - python: 'nightly'
+    - python: 'pypy3'
   include:
     - python: '3.5'
       env:
@@ -40,10 +41,6 @@ addons:
 before_install:
   - export PYTHONFAULTHANDLER=1
   - export PATH=/usr/lib/ccache:$PATH
-  - uname -a
-  - free -m
-  - df -h
-  - ulimit -a
   - mkdir builds
   - pushd builds
   # Install gmpy2 dependencies
@@ -67,6 +64,9 @@ before_install:
   - python -V
   - popd
   - set -o pipefail
+
+install:
+  - travis_retry pip install -e .
 
 script:
   - nosetests -v --with-timer --timer-top-n 10
