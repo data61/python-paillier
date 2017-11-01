@@ -13,7 +13,7 @@ public_key, private_key = paillier.generate_paillier_keypair()
 
 
 def encode_and_encrypt_example():
-    print("Encoding a large positive number. With a BASE 64 encoding scheme")
+    print("Encoding a large positive number. With a BASE {} encoding scheme".format(ExampleEncodedNumber.BASE))
     encoded = ExampleEncodedNumber.encode(public_key, 2.1 ** 20)
     print("Checking that decoding gives the same number...")
     assert 2.1 ** 20 == encoded.decode()
@@ -30,14 +30,14 @@ def encode_and_encrypt_example():
 
 
 def math_example():
-    print("Encoding two large positive numbers. With a BASE 64 encoding "
-          "scheme")
+    print("Encoding two large positive numbers. BASE={}".format(ExampleEncodedNumber.BASE))
 
     a = 102545 + (64 ** 8)
     b = 123 + (8 ** 20)
 
     encoded_a = ExampleEncodedNumber.encode(public_key, a)
     encoded_b = ExampleEncodedNumber.encode(public_key, b)
+
     print("Checking that decoding gives the same number...")
     assert a == encoded_a.decode()
     assert b == encoded_b.decode()
