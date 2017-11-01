@@ -213,7 +213,8 @@ class PaillierPrivateKey(object):
     def __init__(self, public_key, p, q):
         if not p*q == public_key.n:
             raise ValueError('given public key does not match the given p and q.')
-        if p == q: #check that p and q are different, otherwise we can't compute p^-1 mod q
+        if p == q:
+            # check that p and q are different, otherwise we can't compute p^-1 mod q
             raise ValueError('p and q have to be different')
         self.public_key = public_key
         if q < p: #ensure that p < q. 
@@ -226,8 +227,8 @@ class PaillierPrivateKey(object):
         
         self.qsquare = self.q * self.q
         self.p_inverse = invert(self.p, self.q)
-        self.hp = self.h_function(self.p, self.psquare);
-        self.hq = self.h_function(self.q, self.qsquare);
+        self.hp = self.h_function(self.p, self.psquare)
+        self.hq = self.h_function(self.q, self.qsquare)
 
     @staticmethod
     def from_totient(public_key, totient):
@@ -347,8 +348,7 @@ class PaillierPrivateKey(object):
         'Decryption using Chinese-remaindering'.
         """
         return invert(self.l_function(powmod(self.public_key.g, x - 1, xsquare),x), x)
-            
-    
+
     def l_function(self, x, p):
         """Computes the L function as defined in Paillier's paper. That is: L(x,p) = (x-1)/p"""
         return (x - 1) // p
@@ -364,10 +364,11 @@ class PaillierPrivateKey(object):
         return mp + (u * self.p)
 
     def __eq__(self, other):
-        return (self.p == other.p and self.q == other.q)
+        return self.p == other.p and self.q == other.q
 
     def __hash__(self):
         return hash((self.p, self.q))
+
 
 class PaillierPrivateKeyring(Mapping):
     """Holds several private keys and can decrypt using any of them.
