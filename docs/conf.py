@@ -47,7 +47,7 @@ if on_rtd:
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
-            return Mock()
+            return MagicMock()
 
     MOCK_MODULES = ['gmpy2', 'numpy']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
