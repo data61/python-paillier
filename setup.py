@@ -19,23 +19,21 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-
-def find_version():
-    # Note the version is also in the docs/conf.py file
-    # We use semantic versioning - semver.org
-    return "1.3.1"
+about = {}
+with open(os.path.join(here, "phe", "__about__.py")) as f:
+    exec(f.read(), about)
 
 
 setup(
-    name="phe",
-    version=find_version(),
-    description="Partially Homomorphic Encryption library for Python",
+    name=about['__title__'],
+    version=about['__version__'],
+    description=about['__summary__'],
     long_description=open(os.path.join(here, "README.rst")).read(),
-    url="https://github.com/n1analytics/python-paillier",
+    url=about['__uri__'],
     download_url="https://pypi.python.org/pypi/phe/#downloads",
-    author="Data61 | CSIRO",
-    author_email="brian.thorne@data61.csiro.au",
-    license="GPLv3",
+    author=about['__author__'],
+    author_email=about['__email__'],
+    license=about['__license__'],
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
