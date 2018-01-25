@@ -33,15 +33,12 @@ except ImportError:
 
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-    html_theme = 'default'
-else:
-    html_theme = 'nature'
+
+html_theme = 'nature'
 
 # ------------------------------------------------------------------- #
 # MOCK MODULES
 # ------------------------------------------------------------------- #
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if on_rtd:
     class Mock(MagicMock):
