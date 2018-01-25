@@ -1,5 +1,4 @@
-import pkg_resources
-
+from phe.__about__ import *
 from phe.encoding import EncodedNumber
 from phe.paillier import generate_paillier_keypair
 from phe.paillier import EncryptedNumber
@@ -12,6 +11,3 @@ try:
     import phe.command_line
 except ImportError:
     pass
-
-__version__ = pkg_resources.get_distribution('phe').version
-__author__ = 'N1 Analytics'
