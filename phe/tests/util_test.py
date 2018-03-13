@@ -74,9 +74,6 @@ class PaillierUtilFallbacksTest(PaillierUtilTest):
         util.HAVE_GMP = self.HAVE_GMP
         util.HAVE_CRYPTO = self.HAVE_CRYPTO
 
-    def testPrimeOverN(self):
-        pass
-
     def testExtendedEuclieanAlgorithm(self):
         # from <https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm>
         self.assertEqual(util.extended_euclidean_algorithm(240, 46), (2, -9, 47))
@@ -86,6 +83,31 @@ class PaillierUtilFallbacksTest(PaillierUtilTest):
             r, s, t = util.extended_euclidean_algorithm(a, b)
             self.assertEqual(r, s*a + t*b)
             self.assertEqual(r, gcd(a, b))
+
+    def testMillerRabin(self):
+        a = 2  # witness, enough by itself for checking n < 2047
+        self.assertFalse(util.miller_rabin(4, a))
+        self.assertTrue(util.miller_rabin(127, a))
+        composite = util.first_primes[-1] * util.first_primes[-2]
+        self.assertFalse(util.miller_rabin(composite, a))
+
+    def testIsPrime(self):
+        self.assertTrue(util.is_prime(17881))  # first not in first_primes
+        self.assertFalse(util.is_prime(-17881))
+
+        self.assertFalse(util.is_prime(-4))
+        self.assertFalse(util.is_prime(-2))
+        self.assertFalse(util.is_prime(-1))
+        self.assertFalse(util.is_prime(0))
+        self.assertFalse(util.is_prime(1))
+        self.assertTrue(util.is_prime(2))
+        self.assertTrue(util.is_prime(3))
+
+        # same tests as for miller_rabin()
+        self.assertFalse(util.is_prime(4))
+        self.assertTrue(util.is_prime(127))
+        composite = util.first_primes[-1] * util.first_primes[-2]
+        self.assertFalse(util.is_prime(composite))
 
 
 class Base64UtilTest(unittest.TestCase):
