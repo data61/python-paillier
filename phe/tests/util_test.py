@@ -18,6 +18,10 @@
 import unittest
 import random
 import math
+try:
+    from math import gcd  # new in Python 3.5
+except ImportError:
+    from fractions import gcd  # deprecated since Python 3.5
 
 from phe import util
 
@@ -72,6 +76,16 @@ class PaillierUtilFallbacksTest(PaillierUtilTest):
 
     def testPrimeOverN(self):
         pass
+
+    def testExtendedEuclieanAlgorithm(self):
+        # from <https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm>
+        self.assertEqual(util.extended_euclidean_algorithm(240, 46), (2, -9, 47))
+
+        # tests with arbirary values
+        for a, b in [(77, 99), (45, 127)]:  # non-coprime pair, coprime pair
+            r, s, t = util.extended_euclidean_algorithm(a, b)
+            self.assertEqual(r, s*a + t*b)
+            self.assertEqual(r, gcd(a, b))
 
 
 class Base64UtilTest(unittest.TestCase):

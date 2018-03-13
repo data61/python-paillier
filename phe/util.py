@@ -50,6 +50,24 @@ def powmod(a, b, c):
         return int(gmpy2.powmod(a, b, c))
 
 
+def extended_euclidean_algorithm(a, b):
+    """Extended Euclidean algorithm
+
+    Returns r, s, t such that r = s*a + t*b and r is gcd(a, b)
+
+    See <https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm>
+    """
+    r0, r1 = a, b
+    s0, s1 = 1, 0
+    t0, t1 = 0, 1
+    while r1 != 0:
+        q = r0 // r1
+        r0, r1 = r1, r0 - q*r1
+        s0, s1 = s1, s0 - q*s1
+        t0, t1 = t1, t0 - q*t1
+    return r0, s0, t0
+
+
 def invert(a, b):
     """
     The multiplicitive inverse of a in the integers modulo b.
@@ -57,16 +75,18 @@ def invert(a, b):
     :return int: x, where a * x == 1 mod b
     """
     if HAVE_GMP:
-        return int(gmpy2.invert(a, b))
+        s = int(gmpy2.invert(a, b))
+        # according to documentation, gmpy2.invert might return 0 on
+        # non-invertible element, although it seems to actually raise an
+        # exception; for consistency, we always raise the exception
+        if s == 0:
+            raise ZeroDivisionError('invert() no inverse exists')
+        return s
     else:
-        # http://code.activestate.com/recipes/576737-inverse-modulo-p/
-        for d in range(1, b):
-            r = (d * a) % b
-            if r == 1:
-                break
-        else:
-            raise ValueError('%d has no inverse mod %d' % (a, b))
-        return d
+        r, s, _ = extended_euclidean_algorithm(a, b)
+        if r != 1:
+            raise ZeroDivisionError('invert() no inverse exists')
+        return s % b
 
 
 def getprimeover(N):
