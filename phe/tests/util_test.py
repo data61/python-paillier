@@ -54,6 +54,26 @@ class PaillierUtilTest(unittest.TestCase):
             self.assertEqual(util.isqrt(nsq), util.improved_i_sqrt(nsq))
 
 
+# same tests as above, but with gmpy2 and Crypto libraries disabled
+class PaillierUtilFallbacksTest(PaillierUtilTest):
+
+    def setUp(self):
+        # save presence of libraries
+        self.HAVE_GMP = util.HAVE_GMP
+        self.HAVE_CRYPTO = util.HAVE_CRYPTO
+        # disable libraties
+        util.HAVE_GMP = False
+        util.HAVE_CRYPTO = False
+
+    def tearDown(self):
+        # restore presence of libraries
+        util.HAVE_GMP = self.HAVE_GMP
+        util.HAVE_CRYPTO = self.HAVE_CRYPTO
+
+    def testPrimeOverN(self):
+        pass
+
+
 class Base64UtilTest(unittest.TestCase):
 
     def testEncodeDecodePositiveNonZeroInt(self):
