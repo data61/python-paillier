@@ -95,8 +95,8 @@ def isqrt(N):
 
 
 def improved_i_sqrt(n):
-    """ taken from 
-    http://stackoverflow.com/questions/15390807/integer-square-root-in-python 
+    """ taken from
+    http://stackoverflow.com/questions/15390807/integer-square-root-in-python
     Thanks, mathmandan """
     assert n >= 0
     if n == 0:

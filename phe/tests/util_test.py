@@ -45,7 +45,7 @@ class PaillierUtilTest(unittest.TestCase):
         for n in range(2, 50):
             p = util.getprimeover(n)
             self.assertGreaterEqual(p, 1 << (n-1))
-            
+
     def testIsqrt(self):
         for _ in range(100):
             n = random.randint(2, 10000000)
