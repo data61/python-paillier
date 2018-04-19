@@ -78,7 +78,7 @@ class PaillierGeneric(unittest.TestCase):
         c = public_key.encrypt(4242)
         self.assertEqual(private_key, private_key_from_static, "The private keys should be the same.")
         self.assertEqual(private_key_from_static.decrypt(c), 4242, "Result of the decryption should be 4242")
-        
+
     def testPrivateKeyEquality(self):
         pk = PaillierPublicKey(2537)
         p1 = PaillierPrivateKey(pk, 43, 59)

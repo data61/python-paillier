@@ -18,6 +18,10 @@
 import unittest
 import random
 import math
+try:
+    from math import gcd  # new in Python 3.5
+except ImportError:
+    from fractions import gcd  # deprecated since Python 3.5
 
 from phe import util
 
@@ -45,13 +49,65 @@ class PaillierUtilTest(unittest.TestCase):
         for n in range(2, 50):
             p = util.getprimeover(n)
             self.assertGreaterEqual(p, 1 << (n-1))
-            
+
     def testIsqrt(self):
         for _ in range(100):
             n = random.randint(2, 10000000)
             nsq = n*n
             self.assertEqual(int(math.floor(math.sqrt(n))), util.isqrt(n))
             self.assertEqual(util.isqrt(nsq), util.improved_i_sqrt(nsq))
+
+
+# same tests as above, but with gmpy2 and Crypto libraries disabled
+class PaillierUtilFallbacksTest(PaillierUtilTest):
+
+    def setUp(self):
+        # save presence of libraries
+        self.HAVE_GMP = util.HAVE_GMP
+        self.HAVE_CRYPTO = util.HAVE_CRYPTO
+        # disable libraties
+        util.HAVE_GMP = False
+        util.HAVE_CRYPTO = False
+
+    def tearDown(self):
+        # restore presence of libraries
+        util.HAVE_GMP = self.HAVE_GMP
+        util.HAVE_CRYPTO = self.HAVE_CRYPTO
+
+    def testExtendedEuclieanAlgorithm(self):
+        # from <https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm>
+        self.assertEqual(util.extended_euclidean_algorithm(240, 46), (2, -9, 47))
+
+        # tests with arbirary values
+        for a, b in [(77, 99), (45, 127)]:  # non-coprime pair, coprime pair
+            r, s, t = util.extended_euclidean_algorithm(a, b)
+            self.assertEqual(r, s*a + t*b)
+            self.assertEqual(r, gcd(a, b))
+
+    def testMillerRabin(self):
+        a = 2  # witness, enough by itself for checking n < 2047
+        self.assertFalse(util.miller_rabin(4, a))
+        self.assertTrue(util.miller_rabin(127, a))
+        composite = util.first_primes[-1] * util.first_primes[-2]
+        self.assertFalse(util.miller_rabin(composite, a))
+
+    def testIsPrime(self):
+        self.assertTrue(util.is_prime(17881))  # first not in first_primes
+        self.assertFalse(util.is_prime(-17881))
+
+        self.assertFalse(util.is_prime(-4))
+        self.assertFalse(util.is_prime(-2))
+        self.assertFalse(util.is_prime(-1))
+        self.assertFalse(util.is_prime(0))
+        self.assertFalse(util.is_prime(1))
+        self.assertTrue(util.is_prime(2))
+        self.assertTrue(util.is_prime(3))
+
+        # same tests as for miller_rabin()
+        self.assertFalse(util.is_prime(4))
+        self.assertTrue(util.is_prime(127))
+        composite = util.first_primes[-1] * util.first_primes[-2]
+        self.assertFalse(util.is_prime(composite))
 
 
 class Base64UtilTest(unittest.TestCase):

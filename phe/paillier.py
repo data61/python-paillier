@@ -125,7 +125,7 @@ class PaillierPublicKey(object):
             neg_ciphertext = (self.n * neg_plaintext + 1) % self.nsquare
             nude_ciphertext = invert(neg_ciphertext, self.nsquare)
         else:
-            # we chose g = n + 1, so that we can exploit the fact that 
+            # we chose g = n + 1, so that we can exploit the fact that
             # (n+1)^plaintext = n*plaintext + 1 mod n^2
             nude_ciphertext = (self.n * plaintext + 1) % self.nsquare
 
@@ -217,14 +217,14 @@ class PaillierPrivateKey(object):
             # check that p and q are different, otherwise we can't compute p^-1 mod q
             raise ValueError('p and q have to be different')
         self.public_key = public_key
-        if q < p: #ensure that p < q. 
+        if q < p: #ensure that p < q.
             self.p = q
             self.q = p
         else:
             self.p = p
             self.q = q
         self.psquare = self.p * self.p
-        
+
         self.qsquare = self.q * self.q
         self.p_inverse = invert(self.p, self.q)
         self.hp = self.h_function(self.p, self.psquare)
@@ -233,18 +233,18 @@ class PaillierPrivateKey(object):
     @staticmethod
     def from_totient(public_key, totient):
         """given the totient, one can factorize the modulus
-        
+
         The totient is defined as totient = (p - 1) * (q - 1),
         and the modulus is defined as modulus = p * q
-        
+
         Args:
           public_key (PaillierPublicKey): The corresponding public
             key
           totient (int): the totient of the modulus
-          
+
         Returns:
           the :class:`PaillierPrivateKey` that corresponds to the inputs
-          
+
         Raises:
           ValueError: if the given totient is not the totient of the modulus
             of the given public key
@@ -256,7 +256,7 @@ class PaillierPrivateKey(object):
         if not p*q == public_key.n:
             raise ValueError('given public key and totient do not match.')
         return PaillierPrivateKey(public_key, p, q)
-        
+
     def __repr__(self):
         pub_repr = repr(self.public_key)
         return "<PaillierPrivateKey for {}>".format(pub_repr)
@@ -342,9 +342,9 @@ class PaillierPrivateKey(object):
         decrypt_to_p = self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p) * self.hp % self.p
         decrypt_to_q = self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q) * self.hq % self.q
         return self.crt(decrypt_to_p, decrypt_to_q)
-    
+
     def h_function(self, x, xsquare):
-        """Computes the h-function as defined in Paillier's paper page 12, 
+        """Computes the h-function as defined in Paillier's paper page 12,
         'Decryption using Chinese-remaindering'.
         """
         return invert(self.l_function(powmod(self.public_key.g, x - 1, xsquare),x), x)
@@ -352,10 +352,10 @@ class PaillierPrivateKey(object):
     def l_function(self, x, p):
         """Computes the L function as defined in Paillier's paper. That is: L(x,p) = (x-1)/p"""
         return (x - 1) // p
-    
+
     def crt(self, mp, mq):
         """The Chinese Remainder Theorem as needed for decryption. Returns the solution modulo n=pq.
-        
+
         Args:
            mp(int): the solution modulo p.
            mq(int): the solution modulo q.

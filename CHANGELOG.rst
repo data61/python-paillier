@@ -1,3 +1,16 @@
+Version 1.4.0 (2018-04-19)
+=====
+
+Complete pure Python fallback implementation.
+
+Features
+----
+
+- `invert` now available without `gmpy2`, implemented using the extended
+  Euclidean algorithm (`extended_euclidean_algorithm`)
+- `getprimeover` now available without `gmpy2`, along with a probabilitic
+  primality test `isprime` based on the Miller-Rabin test (`miller_rabin`)
+
 Version 1.3.0 (2017-02-08)
 =====
 
