@@ -56,9 +56,9 @@ setup(
     },
     extras_require={
         'cli': ['click'],
-        'examples': ['sklearn']
+        'examples': ['numpy', 'scipy', 'sklearn']
     },
-    install_requires=['gmpy2'],
-    tests_require=['numpy', 'click'],
+    install_requires=[],
+    tests_require=['click', 'gmpy2', 'numpy'],
     test_suite="phe.tests"
 )
