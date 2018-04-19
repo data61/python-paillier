@@ -28,6 +28,16 @@ Or use nose::
 
    nosetests
 
+Note related to gmpy2
+---------------------
+
+`gmpy2` is not required to use the library, but is preferred. A pure Python implementation is available but 
+`gmpy2` drastically improves performances. As indication on a laptop not dedicated to benchmarking, running the example
+`examples/federated_learning_with_encryption.py` provided in the library took:
+ - 4.5s with `gmpy2` installed
+ - 35.7s without `gmpy2` installed
+
+However, `gmpy2` is a requirement to run the tests.
 
 Code History
 ------------
