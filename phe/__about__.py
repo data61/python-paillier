@@ -10,7 +10,7 @@ __summary__ = "Partially Homomorphic Encryption library for Python"
 __uri__ = "https://github.com/n1analytics/python-paillier"
 
 # We use semantic versioning - semver.org
-__version__ = "1.4.0"
+__version__ = "1.4.1-dev0"
 
 __author__ = "N1 Analytics developers"
 __email__ = "info@n1analytics.com"
