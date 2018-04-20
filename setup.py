@@ -29,6 +29,7 @@ setup(
     version=about['__version__'],
     description=about['__summary__'],
     long_description=open(os.path.join(here, "README.rst")).read(),
+    long_description_content_type='text/markdown',
     url=about['__uri__'],
     download_url="https://pypi.python.org/pypi/phe/#downloads",
     author=about['__author__'],
