@@ -1057,6 +1057,33 @@ class PaillierTestEncryptedNumber(PaillierTest):
         ciphertext = self.public_key.encrypt(data)
         self.assertRaises(TypeError, self.private_key.decrypt, str(ciphertext))
 
+    def testIssue62(self):
+        def encrypt_sum_decrypt(a, b):
+            encrypted_a = self.public_key.encrypt(a)
+            encrypted_b = self.public_key.encrypt(b)
+            return self.private_key.decrypt(encrypted_a + encrypted_b)
+
+        # From the issue description, this test is passing
+        a1 = 462
+        b1 = 2.954413649165506
+        c1 = encrypt_sum_decrypt(a1, b1)
+        self.assertEqual(a1 + b1, c1)
+
+        # From the issue 62 description, the two following tests should raise an exception:
+        #   File "/usr/local/lib/python3.6/site-packages/phe/paillier.py", line 287, in decrypt
+        #   return encoded.decode()
+        #   File "/usr/local/lib/python3.6/site-packages/phe/encoding.py", line 220, in decode
+        #   return mantissa * pow(self.BASE, self.exponent)
+        a2 = 593
+        b2 = 0.1641340916202469
+        c2 = encrypt_sum_decrypt(a2, b2)
+        self.assertEqual(a2 + b2, c2)
+
+        a3 = 445
+        b3 = 0.16413409062205825
+        c3 = encrypt_sum_decrypt(a3, b3)
+        self.assertEqual(a3 + b3, c3)
+
 
 class TestKeyring(unittest.TestCase):
     """Test adding and retrieving keys from a keyring."""
