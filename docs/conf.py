@@ -165,7 +165,7 @@ html_theme_path = ['.']
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = "pyphe"
+html_short_title = "phe"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -249,7 +249,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'python-paillier.tex', u'Python Paillier Documentation',
-   u'NICTA', 'manual'),
+   u"CSIRO's Data61", 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -279,7 +279,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'python-paillier', u'pyphe Documentation',
-     [u'NICTA'], 1)
+     [u"CSIRO's DATA61"], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -293,7 +293,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'pyphe', u'pyphe Documentation',
-   u'NICTA', 'pyphe',
+   u"CSIRO's Data61", 'pyphe',
    'Paillier encryption library for partially homomorphic encryption.',
    'Miscellaneous'),
 ]
@@ -310,75 +310,6 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-
-# -- Options for Epub output ----------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = u'phe'
-epub_author = u'NICTA'
-epub_publisher = u'NICTA'
-epub_copyright = u'2014, NICTA'
-
-# The basename for the epub file. It defaults to the project name.
-#epub_basename = u'phe'
-
-# The HTML theme for the epub output. Since the default themes are not optimized
-# for small screen space, using the same theme for HTML and epub output is
-# usually not wise. This defaults to 'epub', a theme designed to save visual
-# space.
-#epub_theme = 'epub'
-
-# The language of the text. It defaults to the language option
-# or en if the language is not set.
-#epub_language = ''
-
-# The scheme of the identifier. Typical schemes are ISBN or URL.
-#epub_scheme = ''
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#epub_identifier = ''
-
-# A unique identification for the text.
-#epub_uid = ''
-
-# A tuple containing the cover image and cover page html template filenames.
-#epub_cover = ()
-
-# A sequence of (type, uri, title) tuples for the guide element of content.opf.
-#epub_guide = ()
-
-# HTML files that should be inserted before the pages created by sphinx.
-# The format is a list of tuples containing the path and title.
-#epub_pre_files = []
-
-# HTML files shat should be inserted after the pages created by sphinx.
-# The format is a list of tuples containing the path and title.
-#epub_post_files = []
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
-
-# The depth of the table of contents in toc.ncx.
-#epub_tocdepth = 3
-
-# Allow duplicate toc entries.
-#epub_tocdup = True
-
-# Choose between 'default' and 'includehidden'.
-#epub_tocscope = 'default'
-
-# Fix unsupported image types using the PIL.
-#epub_fix_images = False
-
-# Scale large images.
-#epub_max_image_width = 0
-
-# How to display URL addresses: 'footnote', 'no', or 'inline'.
-#epub_show_urls = 'inline'
-
-# If false, no index is generated.
-#epub_use_index = True
 
 # Napoleon settings
 napoleon_include_private_with_doc = True
