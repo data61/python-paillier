@@ -171,7 +171,7 @@ class Client:
         """Compute the gradient of the current model using the training set
         """
         delta = self.predict(self.X) - self.y
-        return delta.dot(self.X)
+        return delta.dot(self.X) / len(self.X)
 
     def predict(self, X):
         """Score test data"""
@@ -214,7 +214,7 @@ def federated_learning(X, y, X_test, y_test, config):
 
         # Compute gradients, encrypt and aggregate
         encrypt_aggr = clients[0].encrypted_gradient(sum_to=None)
-        for c in clients:
+        for c in clients[1:]:
             encrypt_aggr = c.encrypted_gradient(sum_to=encrypt_aggr)
 
         # Send aggregate to server and decrypt it
@@ -253,10 +253,10 @@ def local_learning(X, y, X_test, y_test, config):
 
 if __name__ == '__main__':
     config = {
-        'n_clients': 3,
+        'n_clients': 5,
         'key_length': 1024,
         'n_iter': 50,
-        'eta': 0.01,
+        'eta': 1.5,
     }
     # load data, train/test split and split training data between clients
     X, y, X_test, y_test = get_data(n_clients=config['n_clients'])
