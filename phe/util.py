@@ -451,6 +451,7 @@ def int_div_round(a, b):
         else:
             return div
 
+
 def round_m_mul_2_pow_e_mul_b_pow_c(m, e, b, c):
     """Compute round(m * 2 ** e * b ** e) for m, e, b, c integers.
 
@@ -493,4 +494,3 @@ def frexp_int(x):
     m = int(a)
     assert float(m) == a  # Not losing any precision.
     return m, e
-
