@@ -1,6 +1,8 @@
 import math
 import sys
 
+from phe.util import frexp_int, int_div_round, round_m_mul_2_pow_e_mul_b_pow_c
+
 
 class EncodedNumber(object):
     """Represents a float or int encoded for Paillier encryption.
@@ -186,7 +188,27 @@ class EncodedNumber(object):
         else:
             exponent = min(max_exponent, prec_exponent)
 
-        int_rep = int(round(scalar * pow(cls.BASE, -exponent)))
+        # Below is just `int_rep = round(scalar * pow(BASE, -exponent))`
+        # but accouting for all the cases.
+        if isinstance(scalar, int):
+            if exponent <= 0:
+                # Just integer multiplication. This is exact.
+                int_rep = scalar * cls.BASE ** -exponent
+            else:
+                # Integer division with correct rounding.
+                # Can't just to `scalar * cls.BASE ** -exponent` as it
+                # would coerce scalar to float, potentially overflowing.
+                int_rep = int_div_round(scalar, cls.BASE ** exponent)
+        elif isinstance(scalar, float):
+            # It is possible for scalar and BASE ** -exponent to not be
+            # representable as float, even when the encoded value is
+            # a perfectly valid float. We represent scalar as integers
+            # and avoid coercing to float.
+            m, e = frexp_int(scalar)
+            int_rep = round_m_mul_2_pow_e_mul_b_pow_c(m, e,
+                                                      cls.BASE, -exponent)
+        else:
+            raise RuntimeError('argument scalar has unrecognized type')
 
         if abs(int_rep) > public_key.max_int:
             raise ValueError('Integer needs to be within +/- %d but got %d'
@@ -217,7 +239,17 @@ class EncodedNumber(object):
         else:
             raise OverflowError('Overflow detected in decrypted number')
 
-        return mantissa * pow(self.BASE, self.exponent)
+        if self.exponent >= 0:
+            # Integer multiplication. This is exact.
+            return mantissa * self.BASE ** self.exponent
+        else:
+            # BASE ** -e is an integer, so below is a division of ints.
+            # Not coercing mantissa to float prevents some overflows.
+            try:
+                return mantissa / self.BASE ** -self.exponent
+            except OverflowError as e:
+                raise OverflowError(
+                    'decoded result too large for a float') from e
 
     def decrease_exponent_to(self, new_exp):
         """Return an `EncodedNumber` with same value but lower exponent.
