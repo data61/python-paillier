@@ -13,10 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyphe.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
 import os
 import random
-import sys
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from binascii import hexlify, unhexlify
 
