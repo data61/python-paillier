@@ -1,7 +1,6 @@
+import fractions
 import math
 import sys
-
-from phe.util import frexp_int, int_div_round, round_m_mul_2_pow_e_mul_b_pow_c
 
 
 class EncodedNumber(object):
@@ -188,27 +187,8 @@ class EncodedNumber(object):
         else:
             exponent = min(max_exponent, prec_exponent)
 
-        # Below is just `int_rep = round(scalar * pow(BASE, -exponent))`
-        # but accouting for all the cases.
-        if isinstance(scalar, int):
-            if exponent <= 0:
-                # Just integer multiplication. This is exact.
-                int_rep = scalar * cls.BASE ** -exponent
-            else:
-                # Integer division with correct rounding.
-                # Can't just to `scalar * cls.BASE ** -exponent` as it
-                # would coerce scalar to float, potentially overflowing.
-                int_rep = int_div_round(scalar, cls.BASE ** exponent)
-        elif isinstance(scalar, float):
-            # It is possible for scalar and BASE ** -exponent to not be
-            # representable as float, even when the encoded value is
-            # a perfectly valid float. We represent scalar as integers
-            # and avoid coercing to float.
-            m, e = frexp_int(scalar)
-            int_rep = round_m_mul_2_pow_e_mul_b_pow_c(m, e,
-                                                      cls.BASE, -exponent)
-        else:
-            raise RuntimeError('argument scalar has unrecognized type')
+        int_rep = round(fractions.Fraction(scalar)
+                        * fractions.Fraction(cls.BASE) ** -exponent)
 
         if abs(int_rep) > public_key.max_int:
             raise ValueError('Integer needs to be within +/- %d but got %d'
