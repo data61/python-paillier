@@ -187,6 +187,7 @@ class EncodedNumber(object):
         else:
             exponent = min(max_exponent, prec_exponent)
 
+        # Use rationals instead of floats to avoid overflow.
         int_rep = round(fractions.Fraction(scalar)
                         * fractions.Fraction(cls.BASE) ** -exponent)
 
