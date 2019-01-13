@@ -1085,6 +1085,16 @@ class TestKeyring(unittest.TestCase):
         self.assertRaises(KeyError, keyring1.decrypt, ciphertext1)
 
 
+class TestIssue62(unittest.TestCase):
+    def testIssue62(self):
+        pub, priv = paillier.generate_paillier_keypair()
+        a = pub.encrypt(445)
+        # Force big exponent.
+        b = pub.encrypt(0.16413409062205825) + pub.encrypt(2 ** -965)
+        # This will raise OverflowError without bugfix #73.
+        priv.decrypt(a + b)
+
+
 def main():
     unittest.main()
 

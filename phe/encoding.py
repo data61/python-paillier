@@ -1,3 +1,4 @@
+import fractions
 import math
 import sys
 
@@ -186,7 +187,9 @@ class EncodedNumber(object):
         else:
             exponent = min(max_exponent, prec_exponent)
 
-        int_rep = int(round(scalar * pow(cls.BASE, -exponent)))
+        # Use rationals instead of floats to avoid overflow.
+        int_rep = round(fractions.Fraction(scalar)
+                        * fractions.Fraction(cls.BASE) ** -exponent)
 
         if abs(int_rep) > public_key.max_int:
             raise ValueError('Integer needs to be within +/- %d but got %d'
@@ -217,7 +220,17 @@ class EncodedNumber(object):
         else:
             raise OverflowError('Overflow detected in decrypted number')
 
-        return mantissa * pow(self.BASE, self.exponent)
+        if self.exponent >= 0:
+            # Integer multiplication. This is exact.
+            return mantissa * self.BASE ** self.exponent
+        else:
+            # BASE ** -e is an integer, so below is a division of ints.
+            # Not coercing mantissa to float prevents some overflows.
+            try:
+                return mantissa / self.BASE ** -self.exponent
+            except OverflowError as e:
+                raise OverflowError(
+                    'decoded result too large for a float') from e
 
     def decrease_exponent_to(self, new_exp):
         """Return an `EncodedNumber` with same value but lower exponent.
