@@ -9,13 +9,29 @@ python-paillier  |release|
 |      |reqM|         |
 +---------------------+
 
-A Python 3 library for Partially Homomorphic Encryption.
+A Python 3 library implementing the Paillier Partially Homomorphic Encryption.
 
 The homomorphic properties of the paillier crypto system are:
 
 -  Encrypted numbers can be multiplied by a non encrypted scalar.
 -  Encrypted numbers can be added together.
 -  Encrypted numbers can be added to non encrypted scalars.
+
+Citing
+======
+
+`python-paillier` is designed, developed and supported by `CSIRO's Data61 <https://www.data61.csiro.au/>`__. If
+you use any part of this library in your research, please cite it using the following BibTex entry::
+
+    @misc{PythonPaillier,
+      author = {CSIRO's Data61},
+      title = {Python Paillier Library},
+      year = {2013},
+      publisher = {GitHub},
+      journal = {GitHub Repository},
+      howpublished = {\url{https://github.com/data61/python-paillier}},
+    }
+
 
 Running unit tests
 ------------------
@@ -27,6 +43,7 @@ Running unit tests
 Or use nose::
 
    nosetests
+
 
 Note related to gmpy2
 ---------------------
@@ -46,12 +63,6 @@ Developed at `Data61 | CSIRO <http://data61.csiro.au>`_.
 
 Parts derived from the Apache licensed Google project:
 https://code.google.com/p/encrypted-bigquery-client/
-
-No audit
---------
-
-This code has neither been written nor vetted by any sort of crypto
-expert. The crypto parts are mercifully short, however.
 
 
 .. |release| image:: https://img.shields.io/pypi/v/phe.svg
