@@ -13,6 +13,6 @@ __uri__ = "https://github.com/data61/python-paillier"
 __version__ = "1.4.1-dev0"
 
 __author__ = "CSIRO's Data61"
-
+__email__ = "confidential-computing@data61.csiro.au"
 __license__ = "GPLv3"
 __copyright__ = "Copyright 2013-2019 {0}".format(__author__)
