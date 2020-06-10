@@ -45,7 +45,7 @@ before_install:
   - pushd builds
   # Install gmpy2 dependencies
   - mkdir -p $HOME/.local
-  - wget ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
+  - wget https://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
   - tar xzvf mpc-1.0.3.tar.gz
   - pushd mpc-1.0.3
   - ./configure --prefix=$HOME/.local
