@@ -69,12 +69,12 @@ https://code.google.com/p/encrypted-bigquery-client/
     :target: https://pypi.python.org/pypi/phe/
     :alt: Latest released version on PyPi
 
-.. |travisM| image:: https://travis-ci.org/n1analytics/python-paillier.svg?branch=master
-    :target: https://travis-ci.org/n1analytics/python-paillier
+.. |travisM| image:: https://travis-ci.org/data61/python-paillier.svg?branch=master
+    :target: https://travis-ci.org/data61/python-paillier
     :alt: CI status of Master
 
-.. |reqM| image:: https://requires.io/github/n1analytics/python-paillier/requirements.svg?branch=master
-    :target: https://requires.io/github/n1analytics/python-paillier/requirements/?branch=master
+.. |reqM| image:: https://requires.io/github/data61/python-paillier/requirements.svg?branch=master
+    :target: https://requires.io/github/data61/python-paillier/requirements/?branch=master
     :alt: Requirements Status of master
 
 .. |rtdM| image:: https://readthedocs.org/projects/python-paillier/badge/?version=stable
