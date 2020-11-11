@@ -1,6 +1,5 @@
 # After changing this file, check it on:
 #   http://lint.travis-ci.org/
-dist: bionic
 language: python
 sudo: false
 
@@ -48,9 +47,9 @@ before_install:
   - pushd builds
   # Install gmpy2 dependencies
   - mkdir -p $HOME/.local
-  - wget https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz
-  - tar xzvf mpc-1.2.1.tar.gz
-  - pushd mpc-1.2.1
+  - wget https://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
+  - tar xzvf mpc-1.0.3.tar.gz
+  - pushd mpc-1.0.3
   - ./configure --prefix=$HOME/.local
   - make
   - make install
