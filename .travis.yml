@@ -7,7 +7,9 @@ python:
   - '3.4'
   - '3.5'
   - '3.6'
-  - '3.7-dev'
+  - '3.7'
+  - '3.8'
+  - '3.9-dev'
   - 'nightly'
   - 'pypy3'
 
@@ -45,9 +47,9 @@ before_install:
   - pushd builds
   # Install gmpy2 dependencies
   - mkdir -p $HOME/.local
-  - wget https://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
-  - tar xzvf mpc-1.0.3.tar.gz
-  - pushd mpc-1.0.3
+  - wget https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz
+  - tar xzvf mpc-1.2.1.tar.gz
+  - pushd mpc-1.2.1
   - ./configure --prefix=$HOME/.local
   - make
   - make install
