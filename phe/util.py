@@ -33,7 +33,7 @@ except ImportError:
 # GMP's powmod has greater overhead than Python's pow, but is faster.
 # From a quick experiment on our machine, this seems to be the break even:
 _USE_MOD_FROM_GMP_SIZE = (1 << (8*2))
-
+_USE_MULMOD_FROM_GMP_SIZE = (1 << 1000) # pow(2, 1000)
 
 def powmod(a, b, c):
     """
@@ -48,6 +48,20 @@ def powmod(a, b, c):
         return pow(a, b, c)
     else:
         return int(gmpy2.powmod(a, b, c))
+
+
+def mulmod(a, b, c):
+    """
+    Uses GMP, if available, to do a * b mod c, where a, b, c
+    are integers.
+
+    :return int: (a * b) % c
+    """
+    if not HAVE_GMP or max(a, b, c) < _USE_MULMOD_FROM_GMP_SIZE:
+        return a * b % c
+    else:
+        a, b, c = gmpy2.mpz(a), gmpy2.mpz(b), gmpy2.mpz(c)
+        return int(gmpy2.mod(gmpy2.mul(a, b), c))
 
 
 def extended_euclidean_algorithm(a, b):
