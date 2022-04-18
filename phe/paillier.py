@@ -343,12 +343,14 @@ class PaillierPrivateKey(object):
             raise TypeError('Expected ciphertext to be an int, not: %s' %
                 type(ciphertext))
 
-        decrypt_to_p = mulmod(a=self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p),
-                              b=self.hp,
-                              c=self.p)
-        decrypt_to_q = mulmod(a=self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q),
-                              b=self.hq,
-                              c=self.q)
+        decrypt_to_p = mulmod(
+            self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p),
+            self.hp,
+            self.p)
+        decrypt_to_q = mulmod(
+            self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q),
+            self.hq,
+            self.q)
         return self.crt(decrypt_to_p, decrypt_to_q)
 
     def h_function(self, x, xsquare):
