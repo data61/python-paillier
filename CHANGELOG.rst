@@ -1,3 +1,8 @@
+Version 1.5.0
+=============
+
+- `mulmod` now available with gmpy2 acceleration.
+
 Version 1.4.1
 =============
 
