@@ -1,16 +1,10 @@
 import json
 import random
-import unittest
 from unittest import TestCase
 import tempfile
 
-import io
-
-import sys
-import click
 from click.testing import CliRunner
 
-import phe.command_line
 from phe.command_line import cli
 
 

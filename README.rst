@@ -2,7 +2,7 @@ python-paillier  |release|
 ==========================
 
 +---------------------+
-|      |travisM|      |
+|      |ciTest|     |
 +---------------------+
 |      |rtdM|         |
 +---------------------+
@@ -69,9 +69,9 @@ https://code.google.com/p/encrypted-bigquery-client/
     :target: https://pypi.python.org/pypi/phe/
     :alt: Latest released version on PyPi
 
-.. |travisM| image:: https://travis-ci.org/data61/python-paillier.svg?branch=master
-    :target: https://travis-ci.org/data61/python-paillier
-    :alt: CI status of Master
+.. |ciTest| image:: https://github.com/data61/python-paillier/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/data61/python-paillier/actions/workflows/test.yml
+    :alt: CI Status
 
 .. |reqM| image:: https://requires.io/github/data61/python-paillier/requirements.svg?branch=master
     :target: https://requires.io/github/data61/python-paillier/requirements/?branch=master
