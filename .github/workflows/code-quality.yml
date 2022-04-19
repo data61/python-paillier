@@ -2,7 +2,7 @@ name: Code Quality
 on: [pull_request]
 
 jobs:
-  build:
+  linting:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
