@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Enable version updates for Python Deps
+  - package-ecosystem: "pip"
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      interval: "weekly"
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

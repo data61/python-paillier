@@ -1,0 +1,14 @@
+name: Code Quality
+on: [pull_request]
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: 3.x
+    - run: pip install --upgrade pip
+    - run: pip install pylint
+    - run: pylint --disable=all --enable=unused-import phe
