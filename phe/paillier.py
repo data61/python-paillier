@@ -26,7 +26,7 @@ except ImportError:
     Mapping = dict
 
 from phe import EncodedNumber
-from phe.util import invert, powmod, getprimeover, isqrt
+from phe.util import invert, powmod, mulmod, getprimeover, isqrt
 
 # Paillier cryptosystem is based on integer factorisation.
 # The default is chosen to give a minimum of 128 bits of security.
@@ -125,6 +125,7 @@ class PaillierPublicKey(object):
         if self.n - self.max_int <= plaintext < self.n:
             # Very large plaintext, take a sneaky shortcut using inverses
             neg_plaintext = self.n - plaintext  # = abs(plaintext - nsquare)
+            # avoid using gmpy2's mulmod when a * b < c
             neg_ciphertext = (self.n * neg_plaintext + 1) % self.nsquare
             nude_ciphertext = invert(neg_ciphertext, self.nsquare)
         else:
@@ -135,7 +136,7 @@ class PaillierPublicKey(object):
         r = r_value or self.get_random_lt_n()
         obfuscator = powmod(r, self.n, self.nsquare)
 
-        return (nude_ciphertext * obfuscator) % self.nsquare
+        return mulmod(nude_ciphertext, obfuscator, self.nsquare)
 
     def get_random_lt_n(self):
         """Return a cryptographically random number less than :attr:`n`"""
@@ -342,8 +343,14 @@ class PaillierPrivateKey(object):
             raise TypeError('Expected ciphertext to be an int, not: %s' %
                 type(ciphertext))
 
-        decrypt_to_p = self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p) * self.hp % self.p
-        decrypt_to_q = self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q) * self.hq % self.q
+        decrypt_to_p = mulmod(
+            self.l_function(powmod(ciphertext, self.p-1, self.psquare), self.p),
+            self.hp,
+            self.p)
+        decrypt_to_q = mulmod(
+            self.l_function(powmod(ciphertext, self.q-1, self.qsquare), self.q),
+            self.hq,
+            self.q)
         return self.crt(decrypt_to_p, decrypt_to_q)
 
     def h_function(self, x, xsquare):
@@ -363,7 +370,7 @@ class PaillierPrivateKey(object):
            mp(int): the solution modulo p.
            mq(int): the solution modulo q.
        """
-        u = (mq - mp) * self.p_inverse % self.q
+        u = mulmod(mq - mp, self.p_inverse, self.q)
         return mp + (u * self.p)
 
     def __eq__(self, other):
@@ -613,7 +620,7 @@ class EncryptedNumber(object):
         """
         r = self.public_key.get_random_lt_n()
         r_pow_n = powmod(r, self.public_key.n, self.public_key.nsquare)
-        self.__ciphertext = self.__ciphertext * r_pow_n % self.public_key.nsquare
+        self.__ciphertext = mulmod(self.__ciphertext, r_pow_n, self.public_key.nsquare)
         self.__is_obfuscated = True
 
     def _add_scalar(self, scalar):
@@ -709,7 +716,7 @@ class EncryptedNumber(object):
           int: E(a + b), calculated by taking the product of E(a) and
             E(b) modulo :attr:`~PaillierPublicKey.n` ** 2.
         """
-        return e_a * e_b % self.public_key.nsquare
+        return mulmod(e_a, e_b, self.public_key.nsquare)
 
     def _raw_mul(self, plaintext):
         """Returns the integer E(a * plaintext), where E(a) = ciphertext
