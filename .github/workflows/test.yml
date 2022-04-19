@@ -9,7 +9,7 @@ on:
       - "*"
 
 jobs:
-  build:
+  testing:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
